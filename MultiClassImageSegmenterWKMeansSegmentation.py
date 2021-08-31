@@ -9,6 +9,8 @@ from matplotlib.path import Path
 import numpy as np
 
 from skimage import io
+from skimage import data
+from skimage.feature import greycomatrix, greycoprops
 from sklearn.cluster import KMeans
 
 import os
@@ -136,8 +138,11 @@ def Show_Image(IMG_IDX):
     plt.ion()
     shape = None
     fig = plt.figure(figsize=FIGSIZE)
+    fig1 = fig.add_subplot(1, 2, 1)
+    fig2 = fig.add_subplot(1, 2, 2) 
     ax = fig.gca()
     IMG = io.imread(IMAGE_PATHS[IMG_IDX])
+    Ksegment = KMeansSegmentation(IMG)
     img_path = IMAGE_PATHS[IMG_IDX]
     ax.set_title(os.path.basename(img_path))
     MASK_PATH_0 = MASK_DIR_0 + f'/{os.path.basename(img_path)}'
@@ -150,7 +155,8 @@ def Show_Image(IMG_IDX):
     pix_y = np.arange(shape[1])
     xv, yv = np.meshgrid(pix_y,pix_x)
     PIX = np.vstack( (xv.flatten(), yv.flatten()) ).T
-    DISPLAYED = ax.imshow(IMG)
+    DISPLAYED = fig1.imshow(IMG)
+    second = fig2.imshow(Ksegment)
     
     Display_ImgIndex['text'] = 'Image Number: ' + str(root.counter) + '/' + str(NUMBEROFIMAGES)
 
@@ -176,6 +182,46 @@ def Show_Image(IMG_IDX):
     
     if ZOOM_SCALE is not None:
             disconnect_scroll = zoom_factory(ax, base_scale = ZOOM_SCALE)
+
+def KMeansSegmentation(IMG):
+    pic = IMG/255
+    reshapedImg = pic.reshape(pic.shape[0]*pic.shape[1], pic.shape[2])
+    # print(reshapedImg.shape) # (243000,3)
+    kmeans = KMeans(n_clusters=4, random_state=0).fit(reshapedImg)
+    pic2show = kmeans.cluster_centers_[kmeans.labels_]
+    # print(len(kmeans.labels_)) #243000
+    cluster_pic = pic2show.reshape(pic.shape[0], pic.shape[1], pic.shape[2])
+    # fig.add_subplot(1, 2, 2)
+    # plt.imshow(cluster_pic)
+    return cluster_pic
+
+def GrayLevelCooccurrenceMatrix():
+    # Non-Perfusion Area Patches
+    NPALocationPoints = []
+    NonPerfusionArea_Location = np.where(CLASS_MASK_0 == 1)
+    NPALocationPoints.append(NonPerfusionArea_Location)
+    print(NPALocationPoints)
+    # NonPerfusionArea_Patches = []
+    # NonPerfusionArea_Patches.append(IMG[NonPerfusionArea_Location[0]:NonPerfusionArea_Location[0] , NonPerfusionArea_Location[1]:NonPerfusionArea_Location[1]])
+    
+    # BlockageArtefact_Location = np.where(CLASS_MASK_1 == 2)
+    # BlockageArtefact_Patches = []
+    # BlockageArtefact_Patches.append(IMG[BlockageArtefact_Location[0]:BlockageArtefact_Location[0] + PATCH_SIZE, BlockageArtefact_Location[1]:BlockageArtefact_Location[1] + PATCH_SIZE])
+    
+    # HighStandardDeviationArtefact_Location = np.where(CLASS_MASK_2 == 3)
+    # HighStandardDeviationArtefact_Patches = []
+    # HighStandardDeviationArtefact_Patches.append(IMG[HighStandardDeviationArtefact_Location[0]:HighStandardDeviationArtefact_Location[0] + PATCH_SIZE, HighStandardDeviationArtefact_Location[1]:HighStandardDeviationArtefact_Location[1] + PATCH_SIZE])
+    
+    # PerfusionArea_Location = np.where(CLASS_MASK_3 == 4)
+    # PerfusionArea_Patches = []
+    # PerfusionArea_Patches.append(IMG[PerfusionArea_Location[0]:PerfusionArea_Location[0] + PATCH_SIZE, PerfusionArea_Location[1]:PerfusionArea_Location[1] + PATCH_SIZE])
+
+    # xs = []
+    # ys = []
+    # for patch in (NonPerfusionArea_Patches + BlockageArtefact_Patches + HighStandardDeviationArtefact_Patches + PerfusionArea_Location):
+    #     glcm = greycomatrix(patch, distances=[5], angles=[0], levels=256, symmetric=True, normed=True)
+    #     xs.append(greycoprops(glcm, 'dissimilarity')[0, 0])
+    #     ys.append(greycoprops(glcm, 'correlation')[0, 0])
 
 def Choose_Color(*args):
     for ActionIndex,ActionType in ActionDictionary.items():
@@ -323,31 +369,39 @@ if __name__=="__main__":
     options_save = tk.StringVar(ButtonFrame)
     options_save.set('Save Mask:')
 
+##Row1
     LoadFolder = tk.Button(ButtonFrame, text="Load Folder", command = Get_Folder)
-    LoadFolder.place(relx=0.05, rely=0.05, relwidth=0.06, relheight=0.9)
+    LoadFolder.place(relx=0.05, rely=0.05, relwidth=0.06, relheight=0.4)
 
     ClassDropDown = tk.OptionMenu( ButtonFrame, options_class, *ClassDictionary.values())
-    ClassDropDown.place(relx=0.11, rely=0.05, relwidth=0.2, relheight=0.95)
+    ClassDropDown.place(relx=0.11, rely=0.05, relwidth=0.2, relheight=0.4)
 
     Action = tk.OptionMenu(ButtonFrame, options_draw, *ActionDictionary.values())
-    Action.place(relx=0.31, rely=0.05, relwidth=0.06, relheight=0.9)
+    Action.place(relx=0.31, rely=0.05, relwidth=0.06, relheight=0.4)
     
     Reset = tk.Radiobutton(ButtonFrame, text="Reset Mask", value=1,  indicatoron = 0, variable=ResetValue,  command = Reset_Mask)
-    Reset.place(relx=0.37, rely=0.05, relwidth=0.06, relheight=0.9)
+    Reset.place(relx=0.37, rely=0.05, relwidth=0.06, relheight=0.4)
 
     PreviousImage = tk.Button(ButtonFrame, text="Previous", command = Previous_Image_Index)
-    PreviousImage.place(relx=0.43, rely=0.05, relwidth=0.06, relheight=0.9)
+    PreviousImage.place(relx=0.43, rely=0.05, relwidth=0.06, relheight=0.4)
 
     NextImage = tk.Button(ButtonFrame, text="Next", command = Next_Image_Index)
-    NextImage.place(relx=0.49, rely=0.05, relwidth=0.06, relheight=0.9)
+    NextImage.place(relx=0.49, rely=0.05, relwidth=0.06, relheight=0.4)
 
     Display_ImgIndex = tk.Label(ButtonFrame, borderwidth=2, relief="groove")
-    Display_ImgIndex.place(relx=0.55, rely=0.1, relwidth=0.15, relheight=0.9)
+    Display_ImgIndex.place(relx=0.55, rely=0.1, relwidth=0.15, relheight=0.4)
 
     ChooseMaskToSave = tk.OptionMenu(ButtonFrame, options_save, *SavingDictionary.values())
-    ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.9)
+    ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.4)
     
     SaveMask = tk.Button(ButtonFrame, text="Save Image", command = Which_Class_To_Save)
-    SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.9)
+    SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.4)
+
+##Row2
+    AutoSegmentation = tk.Button(ButtonFrame, text="Auto", command = KMeansSegmentation)
+    AutoSegmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
+
+    GLCM = tk.Button(ButtonFrame, text="Auto", command = GrayLevelCooccurrenceMatrix)
+    GLCM.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
 
 root.mainloop()
