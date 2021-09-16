@@ -12,6 +12,7 @@ from skimage import io
 from skimage import data
 from skimage.feature import greycomatrix, greycoprops
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 
 import os
 from os import path
@@ -24,7 +25,7 @@ VALID_IMAGE_TYPES = ['jpeg', 'png', 'bmp', 'gif', 'jpg']
 FIGSIZE=(9,7)
 OVERLAY_ALPHA=.5
 OVERLAY_ERASE = 0
-HEIGHT_OF_GUI = 30
+HEIGHT_OF_GUI = 60
 WIDTH_OF_GUI = 1500
 IMG_IDX = 0
 INDICES = None
@@ -138,11 +139,12 @@ def Show_Image(IMG_IDX):
     plt.ion()
     shape = None
     fig = plt.figure(figsize=FIGSIZE)
-    fig1 = fig.add_subplot(1, 2, 1)
-    fig2 = fig.add_subplot(1, 2, 2) 
+    # fig1 = fig.add_subplot(1, 2, 1)
+    # fig2 = fig.add_subplot(1, 2, 2) 
     ax = fig.gca()
     IMG = io.imread(IMAGE_PATHS[IMG_IDX])
-    Ksegment = KMeansSegmentation(IMG)
+    # Ksegment = KMeansSegmentation(IMG)
+    # DBS = DBSegmentation(IMG)
     img_path = IMAGE_PATHS[IMG_IDX]
     ax.set_title(os.path.basename(img_path))
     MASK_PATH_0 = MASK_DIR_0 + f'/{os.path.basename(img_path)}'
@@ -155,8 +157,9 @@ def Show_Image(IMG_IDX):
     pix_y = np.arange(shape[1])
     xv, yv = np.meshgrid(pix_y,pix_x)
     PIX = np.vstack( (xv.flatten(), yv.flatten()) ).T
-    DISPLAYED = fig1.imshow(IMG)
-    second = fig2.imshow(Ksegment)
+    DISPLAYED = fig.imshow(IMG)
+    # DISPLAYED = fig1.imshow(IMG) 
+    # second = fig2.imshow(DBS)
     
     Display_ImgIndex['text'] = 'Image Number: ' + str(root.counter) + '/' + str(NUMBEROFIMAGES)
 
@@ -186,14 +189,19 @@ def Show_Image(IMG_IDX):
 def KMeansSegmentation(IMG):
     pic = IMG/255
     reshapedImg = pic.reshape(pic.shape[0]*pic.shape[1], pic.shape[2])
-    # print(reshapedImg.shape) # (243000,3)
     kmeans = KMeans(n_clusters=4, random_state=0).fit(reshapedImg)
     pic2show = kmeans.cluster_centers_[kmeans.labels_]
-    # print(len(kmeans.labels_)) #243000
     cluster_pic = pic2show.reshape(pic.shape[0], pic.shape[1], pic.shape[2])
-    # fig.add_subplot(1, 2, 2)
-    # plt.imshow(cluster_pic)
     return cluster_pic
+
+def DBSegmentation(IMG):
+    feature_image=np.reshape(IMG, [-1, 3])
+    rows, cols, chs = IMG.shape
+    db = DBSCAN(eps=5, min_samples=50, metric = 'euclidean',algorithm ='auto')
+    db.fit(feature_image)
+    labels = db.labels_
+    clusterpic = np.reshape(labels, [rows, cols])
+    return clusterpic
 
 def GrayLevelCooccurrenceMatrix():
     # Non-Perfusion Area Patches
@@ -398,10 +406,13 @@ if __name__=="__main__":
     SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.4)
 
 ##Row2
-    AutoSegmentation = tk.Button(ButtonFrame, text="Auto", command = KMeansSegmentation)
+    AutoSegmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
     AutoSegmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    GLCM = tk.Button(ButtonFrame, text="Auto", command = GrayLevelCooccurrenceMatrix)
-    GLCM.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
+    
+    DBScan = tk.Button(ButtonFrame, text="DBScan", command = DBSegmentation)
+    DBScan.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
+    
+    GLCM = tk.Button(ButtonFrame, text="GLCM", command = GrayLevelCooccurrenceMatrix)
+    GLCM.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
 
 root.mainloop()
