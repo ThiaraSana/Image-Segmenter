@@ -11,8 +11,6 @@ import numpy as np
 from skimage import io
 from sklearn.cluster import KMeans
 
-from skimage.feature import greycomatrix, greycoprops
-
 import os
 from os import path
 
@@ -24,7 +22,7 @@ VALID_IMAGE_TYPES = ['jpeg', 'png', 'bmp', 'gif', 'jpg']
 FIGSIZE=(9,7)
 OVERLAY_ALPHA=.5
 OVERLAY_ERASE = 0
-HEIGHT_OF_GUI = 60
+HEIGHT_OF_GUI = 30
 WIDTH_OF_GUI = 1500
 IMG_IDX = 0
 INDICES = None
@@ -48,7 +46,6 @@ CLASS_MASK_0 = []
 CLASS_MASK_1 = []
 CLASS_MASK_2 = []
 CLASS_MASK_3 = []
-PATCH_SIZE = 21
 
 #Functions
 
@@ -161,17 +158,14 @@ def Show_Image(IMG_IDX):
         CLASS_MASK_0 = io.imread(MASK_PATH_0)
     else:
         CLASS_MASK_0 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
-
     if os.path.exists(MASK_PATH_1):
         CLASS_MASK_1 = io.imread(MASK_PATH_1)
     else:
         CLASS_MASK_1 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
-
     if os.path.exists(MASK_PATH_2):
         CLASS_MASK_2 = io.imread(MASK_PATH_2)
     else:
         CLASS_MASK_2 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
-
     if os.path.exists(MASK_PATH_3):
         CLASS_MASK_3 = io.imread(MASK_PATH_3)
     else:
@@ -182,15 +176,6 @@ def Show_Image(IMG_IDX):
     
     if ZOOM_SCALE is not None:
             disconnect_scroll = zoom_factory(ax, base_scale = ZOOM_SCALE)
-
-def KMeansSegmentation():
-    fig = plt.figure(figsize=FIGSIZE)
-    ax = fig.gca()
-    reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
-    kmeans = KMeans(n_clusters=5, random_state=0).fit(reshapedImg)
-    IMG2show = kmeans.cluster_centers_[kmeans.labels_]
-    cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1]) #, IMG.shape[2]
-    ax.imshow(cluster_IMG)
 
 def Choose_Color(*args):
     for ActionIndex,ActionType in ActionDictionary.items():
@@ -249,7 +234,7 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
     elif INDICES is not None: ## To Draw
         ClassMask[INDICES] = class_dropdown
         c_overlay = colors[ClassMask[INDICES]]*255*OVERLAY_ALPHA 
-        array[INDICES] = (IMG[INDICES]*(1-OVERLAY_ALPHA)) #c_overlay + ## Problem: c_overlay has 3 channels (rgb) but test image is bmp so no 3 channels
+        array[INDICES] = (c_overlay + IMG[INDICES]*(1-OVERLAY_ALPHA))
     else:
         idx = ClassMask != 0
         c_overlay = colors[ClassMask[idx]]*255*OVERLAY_ALPHA
@@ -312,109 +297,7 @@ def Previous_Image_Index():
         Show_Image(IMG_IDX)
         if IMG_IDX == 0:
             messagebox.showerror("Error", "You have reached the beginning of the folder.")
-
-def GetNonPerfusionPatch():
-    #ClassMask0
-    NonPerfusionPatch_Locations = np.argwhere(CLASS_MASK_0==1)
-    return NonPerfusionPatch_Locations
-
-def GetPerfusionPatch():
-    #ClassMask3
-    PerfusionPatch_Locations = np.argwhere(CLASS_MASK_3==4)
-    return PerfusionPatch_Locations
-
-def GLCM():
-    # select some patches from NonPerfusion Area of the image
-    NonPerfusionPatch_Locations = GetNonPerfusionPatch()
-    NumberOfNPLocations = len(NonPerfusionPatch_Locations)
-    MidPointOfNPLocations = int(float(len(NonPerfusionPatch_Locations)/2))
-    NonPerfusion_Patches = []
-    for i in range(0, len(NonPerfusionPatch_Locations)):
-        for loc in NonPerfusionPatch_Locations:
-            if i == 0:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == MidPointOfNPLocations:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == NumberOfNPLocations:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            else:
-                i += 1
-
-    # select some patches from Perfusion Area of the image
-    PerfusionPatch_Locations = GetPerfusionPatch()
-    NumberOfPPLocations = len(PerfusionPatch_Locations)
-    MidPointOfPPLocations = int(float(len(PerfusionPatch_Locations)/2))
-    Perfusion_Patches = []
-    for i in range(0, len(PerfusionPatch_Locations)):
-        for loc in PerfusionPatch_Locations:
-            if i == 0:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == MidPointOfPPLocations:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == NumberOfPPLocations:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            else:
-                i += 1
     
-    # compute some GLCM properties each patch
-    Dissimilarity = []
-    Correlation = []
-    for patch in (NonPerfusion_Patches + Perfusion_Patches):
-        glcm = greycomatrix(patch, distances=[5], angles=[0], levels=256, symmetric=True, normed=True)
-        Dissimilarity.append(greycoprops(glcm, 'dissimilarity')[0, 0])
-        Correlation.append(greycoprops(glcm, 'correlation')[0, 0])
-
-    # create the figure
-    fig = plt.figure(figsize=(8, 8))
-
-    # display original image with locations of patches
-    ax = fig.add_subplot(3, 2, 1)
-    ax.imshow(IMG, cmap=plt.cm.gray,
-            vmin=0, vmax=255)
-    for (y, x) in NonPerfusionPatch_Locations:
-        ax.plot(x + PATCH_SIZE / 2, y + PATCH_SIZE / 2, 'gs')
-    for (y, x) in PerfusionPatch_Locations:
-        ax.plot(x + PATCH_SIZE / 2, y + PATCH_SIZE / 2, 'bs')
-    ax.set_xlabel('Original Image')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.axis('image')
-
-    # for each patch, plot (dissimilarity, correlation)
-    ax = fig.add_subplot(3, 2, 2)
-    ax.plot(Dissimilarity[:len(NonPerfusion_Patches)], Correlation[:len(NonPerfusion_Patches)], 'go',
-            label='Grass')
-    ax.plot(Dissimilarity[len(NonPerfusion_Patches):], Correlation[len(NonPerfusion_Patches):], 'bo',
-            label='Sky')
-    ax.set_xlabel('GLCM Dissimilarity')
-    ax.set_ylabel('GLCM Correlation')
-    ax.legend()
-
-    # display the image patches
-    for i, patch in enumerate(NonPerfusion_Patches):
-        ax = fig.add_subplot(3, len(NonPerfusion_Patches), len(NonPerfusion_Patches)*1 + i + 1)
-        ax.imshow(patch, cmap=plt.cm.gray,
-                vmin=0, vmax=255)
-        ax.set_xlabel('Grass %d' % (i + 1))
-
-    for i, patch in enumerate(Perfusion_Patches):
-        ax = fig.add_subplot(3, len(Perfusion_Patches), len(Perfusion_Patches)*2 + i + 1)
-        ax.imshow(patch, cmap=plt.cm.gray,
-                vmin=0, vmax=255)
-        ax.set_xlabel('Sky %d' % (i + 1))
-
-
-    # display the patches and plot
-    fig.suptitle('Grey level co-occurrence matrix features', fontsize=14, y=1.05)
-    plt.tight_layout()
-    plt.show()
-
 #Tkinter Window
 
 if __name__=="__main__":
@@ -440,60 +323,31 @@ if __name__=="__main__":
     options_save = tk.StringVar(ButtonFrame)
     options_save.set('Save Mask:')
 
-##Row1
     LoadFolder = tk.Button(ButtonFrame, text="Load Folder", command = Get_Folder)
-    LoadFolder.place(relx=0.05, rely=0.05, relwidth=0.06, relheight=0.4)
+    LoadFolder.place(relx=0.05, rely=0.05, relwidth=0.06, relheight=0.9)
 
     ClassDropDown = tk.OptionMenu( ButtonFrame, options_class, *ClassDictionary.values())
-    ClassDropDown.place(relx=0.11, rely=0.05, relwidth=0.2, relheight=0.4)
+    ClassDropDown.place(relx=0.11, rely=0.05, relwidth=0.2, relheight=0.95)
 
     Action = tk.OptionMenu(ButtonFrame, options_draw, *ActionDictionary.values())
-    Action.place(relx=0.31, rely=0.05, relwidth=0.06, relheight=0.4)
+    Action.place(relx=0.31, rely=0.05, relwidth=0.06, relheight=0.9)
     
     Reset = tk.Radiobutton(ButtonFrame, text="Reset Mask", value=1,  indicatoron = 0, variable=ResetValue,  command = Reset_Mask)
-    Reset.place(relx=0.37, rely=0.05, relwidth=0.06, relheight=0.4)
+    Reset.place(relx=0.37, rely=0.05, relwidth=0.06, relheight=0.9)
 
     PreviousImage = tk.Button(ButtonFrame, text="Previous", command = Previous_Image_Index)
-    PreviousImage.place(relx=0.43, rely=0.05, relwidth=0.06, relheight=0.4)
+    PreviousImage.place(relx=0.43, rely=0.05, relwidth=0.06, relheight=0.9)
 
     NextImage = tk.Button(ButtonFrame, text="Next", command = Next_Image_Index)
-    NextImage.place(relx=0.49, rely=0.05, relwidth=0.06, relheight=0.4)
+    NextImage.place(relx=0.49, rely=0.05, relwidth=0.06, relheight=0.9)
 
     Display_ImgIndex = tk.Label(ButtonFrame, borderwidth=2, relief="groove")
-    Display_ImgIndex.place(relx=0.55, rely=0.1, relwidth=0.15, relheight=0.4)
+    Display_ImgIndex.place(relx=0.55, rely=0.1, relwidth=0.15, relheight=0.9)
 
     ChooseMaskToSave = tk.OptionMenu(ButtonFrame, options_save, *SavingDictionary.values())
-    ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.4)
+    ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.9)
     
     SaveMask = tk.Button(ButtonFrame, text="Save Image", command = Which_Class_To_Save)
-    SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.4)
-
-##Row2
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    GLCM_Generator = tk.Button(ButtonFrame, text="GLCM", command = GLCM)
-    GLCM_Generator.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.35, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.45, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.55, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
+    SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.9)
 
 root.mainloop()

@@ -204,7 +204,7 @@ def ClassFunction(*args):
 def InitializeLasso(verts):
     LassoPath = Path(verts)
     ClassIndex = ClassFunction()
-    INDICES = LassoPath.contains_points(PIX, radius=0).reshape(450,540) #(1024,1024)
+    INDICES = LassoPath.contains_points(PIX, radius=0).reshape(1024,1024) #(450,540)
     updateArray(INDICES, ResetValue = 0, WhichClass = ClassIndex)
 
 def _change_image_idx_Next():

@@ -22,7 +22,7 @@ VALID_IMAGE_TYPES = ['jpeg', 'png', 'bmp', 'gif', 'jpg']
 FIGSIZE=(9,7)
 OVERLAY_ALPHA=.5
 OVERLAY_ERASE = 0
-HEIGHT_OF_GUI = 30
+HEIGHT_OF_GUI = 60
 WIDTH_OF_GUI = 1500
 IMG_IDX = 0
 INDICES = None
@@ -151,21 +151,24 @@ def Show_Image(IMG_IDX):
     xv, yv = np.meshgrid(pix_y,pix_x)
     PIX = np.vstack( (xv.flatten(), yv.flatten()) ).T
     DISPLAYED = ax.imshow(IMG)
-    
+
     Display_ImgIndex['text'] = 'Image Number: ' + str(root.counter) + '/' + str(NUMBEROFIMAGES)
 
     if os.path.exists(MASK_PATH_0):
         CLASS_MASK_0 = io.imread(MASK_PATH_0)
     else:
         CLASS_MASK_0 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
     if os.path.exists(MASK_PATH_1):
         CLASS_MASK_1 = io.imread(MASK_PATH_1)
     else:
         CLASS_MASK_1 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
     if os.path.exists(MASK_PATH_2):
         CLASS_MASK_2 = io.imread(MASK_PATH_2)
     else:
         CLASS_MASK_2 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
     if os.path.exists(MASK_PATH_3):
         CLASS_MASK_3 = io.imread(MASK_PATH_3)
     else:
@@ -176,6 +179,15 @@ def Show_Image(IMG_IDX):
     
     if ZOOM_SCALE is not None:
             disconnect_scroll = zoom_factory(ax, base_scale = ZOOM_SCALE)
+
+# def KMeansSegmentation():
+#     fig = plt.figure(figsize=FIGSIZE)
+#     ax = fig.gca()
+#     reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
+#     kmeans = KMeans(n_clusters=5, random_state=0).fit(reshapedImg)
+#     IMG2show = kmeans.cluster_centers_[kmeans.labels_]
+#     cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1]) #, IMG.shape[2]
+#     ax.imshow(cluster_IMG)
 
 def Choose_Color(*args):
     for ActionIndex,ActionType in ActionDictionary.items():
@@ -197,12 +209,13 @@ def Render_Lasso(verts):
     LassoPath = Path(verts)
     Color = Choose_Color()
     Class = Choose_Class()
-    INDICES = LassoPath.contains_points(PIX, radius=0).reshape(450,540) #(1024,1024)
+    INDICES = LassoPath.contains_points(PIX, radius=0).reshape(1024,1024) #(450,540)
     Update_Array(INDICES, ResetValue = 0, ClassColor = Color, WhichClass = Class)
 
 def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
-    
+
     array = DISPLAYED.get_array().data
+    print("test:" + str(array.shape))
     ImageClasses = [['Non-Perfusion Area'], ['Blockage Artefact'], ['High Standard Deviation Artefact'], ['Perfusion Area']]
     if isinstance(ImageClasses, int):
         ImageClasses = np.arange(ImageClasses)
@@ -212,7 +225,7 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
         colors = 'tab20'
     else:
         raise ValueError(f'Currently only up to 20 ImageClasses are supported, you tried to use {len(ImageClasses)} ImageClasses')
-    colors = np.vstack([[0,0,0],plt.get_cmap(colors)(np.arange(len(ImageClasses)))[:,:3]])
+    colors = np.vstack([[0,0,0], plt.get_cmap(colors)(np.arange(len(ImageClasses)))[:,:3]])
 
     class_dropdown = ClassColor
     if WhichClass == 1:
@@ -223,7 +236,7 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
         ClassMask = CLASS_MASK_2
     elif WhichClass == 4:
         ClassMask = CLASS_MASK_3
-    
+
     if ResetValue ==1: ## To Reset
         ClassMask[INDICES] = 0
         array[INDICES] = IMG[INDICES]
@@ -233,8 +246,9 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
         array[INDICES] = (c_overlay + IMG[INDICES]*(1-OVERLAY_ERASE))
     elif INDICES is not None: ## To Draw
         ClassMask[INDICES] = class_dropdown
-        c_overlay = colors[ClassMask[INDICES]]*255*OVERLAY_ALPHA 
-        array[INDICES] = (c_overlay + IMG[INDICES]*(1-OVERLAY_ALPHA))
+        c_overlay = colors[ClassMask[INDICES]]*255*OVERLAY_ALPHA
+        array[INDICES] = (IMG[INDICES]*(1-OVERLAY_ALPHA)) #c_overlay + ## Problem: c_overlay has 3 channels (rgb) but test image is bmp so no 3 channels
+
     else:
         idx = ClassMask != 0
         c_overlay = colors[ClassMask[idx]]*255*OVERLAY_ALPHA
@@ -323,31 +337,36 @@ if __name__=="__main__":
     options_save = tk.StringVar(ButtonFrame)
     options_save.set('Save Mask:')
 
+##Row1
     LoadFolder = tk.Button(ButtonFrame, text="Load Folder", command = Get_Folder)
-    LoadFolder.place(relx=0.05, rely=0.05, relwidth=0.06, relheight=0.9)
+    LoadFolder.place(relx=0.05, rely=0.05, relwidth=0.06, relheight=0.4)
 
     ClassDropDown = tk.OptionMenu( ButtonFrame, options_class, *ClassDictionary.values())
-    ClassDropDown.place(relx=0.11, rely=0.05, relwidth=0.2, relheight=0.95)
+    ClassDropDown.place(relx=0.11, rely=0.05, relwidth=0.2, relheight=0.4)
 
     Action = tk.OptionMenu(ButtonFrame, options_draw, *ActionDictionary.values())
-    Action.place(relx=0.31, rely=0.05, relwidth=0.06, relheight=0.9)
+    Action.place(relx=0.31, rely=0.05, relwidth=0.06, relheight=0.4)
     
     Reset = tk.Radiobutton(ButtonFrame, text="Reset Mask", value=1,  indicatoron = 0, variable=ResetValue,  command = Reset_Mask)
-    Reset.place(relx=0.37, rely=0.05, relwidth=0.06, relheight=0.9)
+    Reset.place(relx=0.37, rely=0.05, relwidth=0.06, relheight=0.4)
 
     PreviousImage = tk.Button(ButtonFrame, text="Previous", command = Previous_Image_Index)
-    PreviousImage.place(relx=0.43, rely=0.05, relwidth=0.06, relheight=0.9)
+    PreviousImage.place(relx=0.43, rely=0.05, relwidth=0.06, relheight=0.4)
 
     NextImage = tk.Button(ButtonFrame, text="Next", command = Next_Image_Index)
-    NextImage.place(relx=0.49, rely=0.05, relwidth=0.06, relheight=0.9)
+    NextImage.place(relx=0.49, rely=0.05, relwidth=0.06, relheight=0.4)
 
     Display_ImgIndex = tk.Label(ButtonFrame, borderwidth=2, relief="groove")
-    Display_ImgIndex.place(relx=0.55, rely=0.1, relwidth=0.15, relheight=0.9)
+    Display_ImgIndex.place(relx=0.55, rely=0.1, relwidth=0.15, relheight=0.4)
 
     ChooseMaskToSave = tk.OptionMenu(ButtonFrame, options_save, *SavingDictionary.values())
-    ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.9)
+    ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.4)
     
     SaveMask = tk.Button(ButtonFrame, text="Save Image", command = Which_Class_To_Save)
-    SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.9)
+    SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.4)
+
+##Row2
+    # AutoSegmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # AutoSegmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
 
 root.mainloop()
