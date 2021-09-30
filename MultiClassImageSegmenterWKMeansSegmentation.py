@@ -188,17 +188,17 @@ def KMeansSegmentation():
     fig = plt.figure(figsize=FIGSIZE)
     ax = fig.gca()
     reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
-    kmeans = KMeans(n_clusters=100, random_state=0)
+    kmeans = KMeans(n_clusters=23, random_state=0)
     kmeans.fit(reshapedImg)
     y_kmeans = kmeans.predict(reshapedImg)
     IMG2show = kmeans.cluster_centers_[kmeans.labels_]
-    # plt.scatter(reshapedImg[:, 0], reshapedImg[:, 1], c=y_kmeans, s=50)
-    # centers = kmeans.cluster_centers_
-    # plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
-    cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1])#, IMG.shape[2]
-    ax.imshow(cluster_IMG)
-    img_uint8 = cluster_IMG.astype(np.uint8)
-    io.imsave("/Users/sanaahmed/Desktop/untitled/train/clustering.png", img_uint8*255, check_contrast =False)
+    plt.scatter(reshapedImg[:, 0], reshapedImg[:, 1], c=y_kmeans, s=50)
+    centers = kmeans.cluster_centers_
+    plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+    # cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1])#, IMG.shape[2]
+    # ax.imshow(cluster_IMG)
+    # img_uint8 = cluster_IMG.astype(np.uint8)
+    # io.imsave("/Users/sanaahmed/Desktop/untitled/train/clustering.png", img_uint8*255, check_contrast =False)
     
 
 def Choose_Color(*args):
@@ -343,12 +343,12 @@ def GLCM():
             if i == 0:
                 NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
                 i += 1
-            # elif i == MidPointOfNPLocations:
-            #     NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-            #     i += 1
-            # elif i == NumberOfNPLocations:
-            #     NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-            #     i += 1
+            elif i == MidPointOfNPLocations:
+                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+                i += 1
+            elif i == NumberOfNPLocations:
+                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+                i += 1
             else:
                 i += 1
 
@@ -362,11 +362,11 @@ def GLCM():
             if i == 0:
                 Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
                 i += 1
-            # elif i == MidPointOfPPLocations:
-            #     Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-            #     i += 1
-            # elif i == NumberOfPPLocations:
-            #     Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+            elif i == MidPointOfPPLocations:
+                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+                i += 1
+            elif i == NumberOfPPLocations:
+                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
             #     i += 1
             else:
                 i += 1
