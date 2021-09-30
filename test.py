@@ -5,9 +5,16 @@ import matplotlib.pyplot as plt
 import cv2
 import imghdr
 
+from yellowbrick.cluster import KElbowVisualizer
+from sklearn.cluster import KMeans
+
+img = io.imread("/Users/sanaahmed/Desktop/untitled/train/image.png")
+model = KElbowVisualizer(KMeans(), k=70)
+model.fit(img)
+model.show()
 # img = cv2.imread("/Users/sanaahmed/Desktop/test.png")
 # labimg = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-print(imghdr.what("/Users/sanaahmed/Desktop/untitled/train/train_masks/train/Class1/image.png", h=None))
+# print(imghdr.what("/Users/sanaahmed/Desktop/untitled/train/train_masks/train/Class1/image.png", h=None))
 # img = io.imread("/Users/sanaahmed/Desktop/untitled/train/image.png")
 # p = np.array(img)
 # print(p.shape)

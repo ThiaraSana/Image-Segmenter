@@ -22,7 +22,7 @@ import glob
 
 VALID_IMAGE_TYPES = ['jpeg', 'png', 'bmp', 'gif', 'jpg']
 FIGSIZE=(9,7)
-OVERLAY_ALPHA=.5
+OVERLAY_ALPHA=.9
 OVERLAY_ERASE = 0
 HEIGHT_OF_GUI = 60
 WIDTH_OF_GUI = 1500
@@ -184,13 +184,22 @@ def Show_Image(IMG_IDX):
             disconnect_scroll = zoom_factory(ax, base_scale = ZOOM_SCALE)
 
 def KMeansSegmentation():
+
     fig = plt.figure(figsize=FIGSIZE)
     ax = fig.gca()
     reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
-    kmeans = KMeans(n_clusters=5, random_state=0).fit(reshapedImg)
+    kmeans = KMeans(n_clusters=100, random_state=0)
+    kmeans.fit(reshapedImg)
+    y_kmeans = kmeans.predict(reshapedImg)
     IMG2show = kmeans.cluster_centers_[kmeans.labels_]
-    cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1]) #, IMG.shape[2]
+    # plt.scatter(reshapedImg[:, 0], reshapedImg[:, 1], c=y_kmeans, s=50)
+    # centers = kmeans.cluster_centers_
+    # plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+    cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1])#, IMG.shape[2]
     ax.imshow(cluster_IMG)
+    img_uint8 = cluster_IMG.astype(np.uint8)
+    io.imsave("/Users/sanaahmed/Desktop/untitled/train/clustering.png", img_uint8*255, check_contrast =False)
+    
 
 def Choose_Color(*args):
     for ActionIndex,ActionType in ActionDictionary.items():
@@ -334,12 +343,12 @@ def GLCM():
             if i == 0:
                 NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
                 i += 1
-            elif i == MidPointOfNPLocations:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == NumberOfNPLocations:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
+            # elif i == MidPointOfNPLocations:
+            #     NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+            #     i += 1
+            # elif i == NumberOfNPLocations:
+            #     NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+            #     i += 1
             else:
                 i += 1
 
@@ -353,12 +362,12 @@ def GLCM():
             if i == 0:
                 Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
                 i += 1
-            elif i == MidPointOfPPLocations:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == NumberOfPPLocations:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
+            # elif i == MidPointOfPPLocations:
+            #     Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+            #     i += 1
+            # elif i == NumberOfPPLocations:
+            #     Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
+            #     i += 1
             else:
                 i += 1
     
@@ -389,9 +398,9 @@ def GLCM():
     # for each patch, plot (dissimilarity, correlation)
     ax = fig.add_subplot(3, 2, 2)
     ax.plot(Dissimilarity[:len(NonPerfusion_Patches)], Correlation[:len(NonPerfusion_Patches)], 'go',
-            label='Grass')
+            label='NonPerfusion')
     ax.plot(Dissimilarity[len(NonPerfusion_Patches):], Correlation[len(NonPerfusion_Patches):], 'bo',
-            label='Sky')
+            label='Perfusion')
     ax.set_xlabel('GLCM Dissimilarity')
     ax.set_ylabel('GLCM Correlation')
     ax.legend()
@@ -401,13 +410,13 @@ def GLCM():
         ax = fig.add_subplot(3, len(NonPerfusion_Patches), len(NonPerfusion_Patches)*1 + i + 1)
         ax.imshow(patch, cmap=plt.cm.gray,
                 vmin=0, vmax=255)
-        ax.set_xlabel('Grass %d' % (i + 1))
+        ax.set_xlabel('NonPerfusion %d' % (i + 1))
 
     for i, patch in enumerate(Perfusion_Patches):
         ax = fig.add_subplot(3, len(Perfusion_Patches), len(Perfusion_Patches)*2 + i + 1)
         ax.imshow(patch, cmap=plt.cm.gray,
                 vmin=0, vmax=255)
-        ax.set_xlabel('Sky %d' % (i + 1))
+        ax.set_xlabel('Perfusion %d' % (i + 1))
 
 
     # display the patches and plot
@@ -475,25 +484,25 @@ if __name__=="__main__":
     GLCM_Generator = tk.Button(ButtonFrame, text="GLCM", command = GLCM)
     GLCM_Generator.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.35, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.35, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.45, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.45, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.55, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.55, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    KMeans_Segmentation.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
+    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
+    # KMeans_Segmentation.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
 
 root.mainloop()
