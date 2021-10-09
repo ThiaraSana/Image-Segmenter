@@ -13,6 +13,10 @@ from sklearn.cluster import KMeans
 
 from skimage.feature import greycomatrix, greycoprops
 
+import radiomics
+from radiomics import glrlm
+from radiomics import featureextractor
+
 import os
 from os import path
 
@@ -183,24 +187,6 @@ def Show_Image(IMG_IDX):
     if ZOOM_SCALE is not None:
             disconnect_scroll = zoom_factory(ax, base_scale = ZOOM_SCALE)
 
-def KMeansSegmentation():
-
-    fig = plt.figure(figsize=FIGSIZE)
-    ax = fig.gca()
-    reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
-    kmeans = KMeans(n_clusters=23, random_state=0)
-    kmeans.fit(reshapedImg)
-    y_kmeans = kmeans.predict(reshapedImg)
-    IMG2show = kmeans.cluster_centers_[kmeans.labels_]
-    plt.scatter(reshapedImg[:, 0], reshapedImg[:, 1], c=y_kmeans, s=50)
-    centers = kmeans.cluster_centers_
-    plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
-    # cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1])#, IMG.shape[2]
-    # ax.imshow(cluster_IMG)
-    # img_uint8 = cluster_IMG.astype(np.uint8)
-    # io.imsave("/Users/sanaahmed/Desktop/untitled/train/clustering.png", img_uint8*255, check_contrast =False)
-    
-
 def Choose_Color(*args):
     for ActionIndex,ActionType in ActionDictionary.items():
         if ActionType==options_draw.get():
@@ -225,7 +211,7 @@ def Render_Lasso(verts):
     Update_Array(INDICES, ResetValue = 0, ClassColor = Color, WhichClass = Class)
 
 def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
-    
+
     array = DISPLAYED.get_array().data
     ImageClasses = [['Non-Perfusion Area'], ['Blockage Artefact'], ['High Standard Deviation Artefact'], ['Perfusion Area']]
     if isinstance(ImageClasses, int):
@@ -322,6 +308,24 @@ def Previous_Image_Index():
         if IMG_IDX == 0:
             messagebox.showerror("Error", "You have reached the beginning of the folder.")
 
+def KMeansSegmentation():
+    fig = plt.figure(figsize=FIGSIZE)
+    ax = fig.gca()
+    reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
+    kmeans = KMeans(n_clusters=23, random_state=0)
+    kmeans.fit(reshapedImg)
+    y_kmeans = kmeans.predict(reshapedImg)
+    IMG2show = kmeans.cluster_centers_[kmeans.labels_]
+    plt.scatter(reshapedImg[:, 0], reshapedImg[:, 1], c=y_kmeans, s=50)
+    centers = kmeans.cluster_centers_
+    plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+    # cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1])#, IMG.shape[2]
+    # ax.imshow(cluster_IMG)
+    # img_uint8 = cluster_IMG.astype(np.uint8)
+    # io.imsave("/Users/sanaahmed/Desktop/untitled/train/clustering.png", img_uint8*255, check_contrast =False)
+
+def DBScanSegmentation(): ...
+
 def GetNonPerfusionPatch():
     #ClassMask0
     NonPerfusionPatch_Locations = np.argwhere(CLASS_MASK_0==1)
@@ -332,7 +336,7 @@ def GetPerfusionPatch():
     PerfusionPatch_Locations = np.argwhere(CLASS_MASK_3==4)
     return PerfusionPatch_Locations
 
-def GLCM():
+def CoOccurenceMatrix():
     # select some patches from NonPerfusion Area of the image
     NonPerfusionPatch_Locations = GetNonPerfusionPatch()
     NumberOfNPLocations = len(NonPerfusionPatch_Locations)
@@ -424,6 +428,19 @@ def GLCM():
     plt.tight_layout()
     plt.show()
 
+def RunLengthMatrix():...
+
+def SizeZoneMatrix(): ...
+
+def DependenceMatrix(): ...
+
+def HistogramGenerator(): ...
+
+def LoGFilter(): ...
+
+def WaveletTransformation(): ...
+
+
 #Tkinter Window
 
 if __name__=="__main__":
@@ -477,32 +494,34 @@ if __name__=="__main__":
     SaveMask = tk.Button(ButtonFrame, text="Save Image", command = Which_Class_To_Save)
     SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.4)
 
-##Row2
+##Row2 - ML Segmentation
     KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
     KMeans_Segmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    GLCM_Generator = tk.Button(ButtonFrame, text="GLCM", command = GLCM)
-    GLCM_Generator.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
+    DBScan_Segmentation = tk.Button(ButtonFrame, text="DB Scan", command = DBScanSegmentation)
+    DBScan_Segmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
+##Row2 - Feature Classes
+    GLCM_Generator = tk.Button(ButtonFrame, text="GLCM", command = CoOccurenceMatrix)
+    GLCM_Generator.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.35, rely=0.45, relwidth=0.1, relheight=0.4)
+    GLRLM_Generator = tk.Button(ButtonFrame, text="GLRLM", command = RunLengthMatrix)
+    GLRLM_Generator.place(relx=0.35, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.45, rely=0.45, relwidth=0.1, relheight=0.4)
+    GLSZM_Generator = tk.Button(ButtonFrame, text="GLSZMM", command = SizeZoneMatrix)
+    GLSZM_Generator.place(relx=0.45, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.55, rely=0.45, relwidth=0.1, relheight=0.4)
+    GLDM_Generator = tk.Button(ButtonFrame, text="GLDM", command = DependenceMatrix)
+    GLDM_Generator.place(relx=0.55, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
+    Histogram_Generator = tk.Button(ButtonFrame, text="Histogram", command = HistogramGenerator)
+    Histogram_Generator.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
+##Row2 - Image Filter
+    LoG_Filter = tk.Button(ButtonFrame, text="LoG Filter", command = LoGFilter)
+    LoG_Filter.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    # KMeans_Segmentation = tk.Button(ButtonFrame, text="KMeans", command = KMeansSegmentation)
-    # KMeans_Segmentation.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
+    Wavelet_Transform = tk.Button(ButtonFrame, text="Wavelet", command = WaveletTransformation)
+    Wavelet_Transform.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
 
 root.mainloop()
