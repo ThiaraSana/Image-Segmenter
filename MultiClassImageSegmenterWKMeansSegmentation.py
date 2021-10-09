@@ -133,6 +133,14 @@ def Get_Folder():
     MASK_DIR_4 = path.join(img_dir.rsplit('train_imgs/',1)[0], 'train_masks/train/MultiClass')
     if not os.path.isdir(MASK_DIR_0):
         os.makedirs(MASK_DIR_0)
+    if not os.path.isdir(MASK_DIR_1):
+        os.makedirs(MASK_DIR_1)
+    if not os.path.isdir(MASK_DIR_2):
+        os.makedirs(MASK_DIR_2)
+    if not os.path.isdir(MASK_DIR_3):
+        os.makedirs(MASK_DIR_3)
+    if not os.path.isdir(MASK_DIR_4):
+        os.makedirs(MASK_DIR_4)
     for type_ in VALID_IMAGE_TYPES:
         IMAGE_PATHS += (glob.glob(img_dir.rstrip('/')+f'/*.{type_}'))
         NUMBEROFIMAGES = len(IMAGE_PATHS)
