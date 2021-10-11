@@ -10,6 +10,7 @@ import numpy as np
 
 from skimage import io
 from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
 
 from skimage.feature import greycomatrix, greycoprops
 
@@ -316,23 +317,9 @@ def Previous_Image_Index():
         if IMG_IDX == 0:
             messagebox.showerror("Error", "You have reached the beginning of the folder.")
 
-def KMeansSegmentation():
-    fig = plt.figure(figsize=FIGSIZE)
-    ax = fig.gca()
-    reshapedImg = IMG.reshape(IMG.shape[0], IMG.shape[1]) #*IMG.shape[1]
-    kmeans = KMeans(n_clusters=23, random_state=0)
-    kmeans.fit(reshapedImg)
-    y_kmeans = kmeans.predict(reshapedImg)
-    IMG2show = kmeans.cluster_centers_[kmeans.labels_]
-    plt.scatter(reshapedImg[:, 0], reshapedImg[:, 1], c=y_kmeans, s=50)
-    centers = kmeans.cluster_centers_
-    plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
-    # cluster_IMG = IMG2show.reshape(IMG.shape[0], IMG.shape[1])#, IMG.shape[2]
-    # ax.imshow(cluster_IMG)
-    # img_uint8 = cluster_IMG.astype(np.uint8)
-    # io.imsave("/Users/sanaahmed/Desktop/untitled/train/clustering.png", img_uint8*255, check_contrast =False)
+def KMeansSegmentation():...
 
-def DBScanSegmentation(): ...
+def DBScanSegmentation():...
 
 def GetNonPerfusionPatch():
     #ClassMask0
@@ -507,7 +494,7 @@ if __name__=="__main__":
     KMeans_Segmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
 
     DBScan_Segmentation = tk.Button(ButtonFrame, text="DB Scan", command = DBScanSegmentation)
-    DBScan_Segmentation.place(relx=0.05, rely=0.45, relwidth=0.1, relheight=0.4)
+    DBScan_Segmentation.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
 
 ##Row2 - Feature Classes
     GLCM_Generator = tk.Button(ButtonFrame, text="GLCM", command = CoOccurenceMatrix)
