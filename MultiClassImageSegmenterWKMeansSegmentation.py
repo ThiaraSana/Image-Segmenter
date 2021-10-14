@@ -8,6 +8,8 @@ from matplotlib.path import Path
 
 import numpy as np
 
+import csv
+
 from skimage import io
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
@@ -17,6 +19,7 @@ from skimage.feature import greycomatrix, greycoprops
 import radiomics
 from radiomics import glrlm
 from radiomics import featureextractor
+
 
 import os
 from os import path
@@ -36,23 +39,45 @@ INDICES = None
 LINEPROPS = {'color': 'black', 'linewidth': 1, 'alpha': 0.8}
 ZOOM_SCALE=1.1
 NUMBEROFIMAGES = 0
+IMAGE_DIRECTORY = []
 IMG = []
 IMAGE_PATHS = []
 PIX = []
-MASK_DIR_0 = []
-MASK_DIR_1 = []
-MASK_DIR_2 = []
-MASK_DIR_3 = []
-MASK_DIR_4 = []
-MASK_PATH_0 = []
-MASK_PATH_1 = []
-MASK_PATH_2 = []
-MASK_PATH_3 = []
-MASK_PATH_4 = []
-CLASS_MASK_0 = []
-CLASS_MASK_1 = []
-CLASS_MASK_2 = []
-CLASS_MASK_3 = []
+
+# NONPERFUSION_GREYSCALE = []
+# BLOCKAGE_GREYSCALE = []
+# HIGHSD_GREYSCALE = []
+# PERFUSION_GREYSCALE = []
+# MULTICLASS_GREYSCALE = []
+
+# NONPERFUSION_BINARY = []
+# BLOCKAGE_BINARY = []
+# HIGHSD_BINARY = []
+# PERFUSION_BINARY = []
+# MULTICLASS_BINARY = []
+
+# NONPERFUSION_GREYSCALE_MASKPATH = []
+# BLOCKAGE_GREYSCALE_MASKPATH = []
+# HIGHSD_GREYSCALE_MASKPATH = []
+# PERFUSION_GREYSCALE_MASKPATH = []
+# MULTICLASS_GREYSCALE_MASKPATH = []
+
+# NONPERFUSION_BINARY_MASKPATH = []
+# BLOCKAGE_BINARY_MASKPATH = []
+# HIGHSD_BINARY_MASKPATH = []
+# PERFUSION_BINARY_MASKPATH = []
+# MULTICLASS_BINARY_MASKPATH = []
+
+# NONPERFUSION_GREYSCALE_MASK = []
+# BLOCKAGE_GREYSCALE_MASK = []
+# HIGHSD_GREYSCALE_MASK = []
+# PERFUSION_GREYSCALE_MASK = []
+
+# NONPERFUSION_BINARY_MASK = []
+# BLOCKAGE_BINARY_MASK = []
+# HIGHSD_BINARY_MASK = []
+# PERFUSION_BINARY_MASK = []
+
 PATCH_SIZE = 21
 
 #Functions
@@ -122,33 +147,56 @@ def zoom_factory(ax,base_scale = 1.1):
     return disconnect_zoom
 
 def Get_Folder():
-    global MASK_DIR_0,MASK_DIR_1,MASK_DIR_2,MASK_DIR_3, MASK_DIR_4, IMAGE_PATHS, INDICES, NUMBEROFIMAGES
-    img_dir = filedialog.askdirectory()
-    if not path.isdir(path.join(img_dir, 'train')):
-        raise ValueError(f"{img_dir} must exist and contain the the folder 'train'")
-    img_dir = path.join(img_dir, 'train')
-    MASK_DIR_0 = path.join(img_dir.rsplit('train_imgs/',1)[0], 'train_masks/train/Class1')
-    MASK_DIR_1 = path.join(img_dir.rsplit('train_imgs/',1)[0], 'train_masks/train/Class2')
-    MASK_DIR_2 = path.join(img_dir.rsplit('train_imgs/',1)[0], 'train_masks/train/Class3')
-    MASK_DIR_3 = path.join(img_dir.rsplit('train_imgs/',1)[0], 'train_masks/train/Class4')
-    MASK_DIR_4 = path.join(img_dir.rsplit('train_imgs/',1)[0], 'train_masks/train/MultiClass')
-    if not os.path.isdir(MASK_DIR_0):
-        os.makedirs(MASK_DIR_0)
-    if not os.path.isdir(MASK_DIR_1):
-        os.makedirs(MASK_DIR_1)
-    if not os.path.isdir(MASK_DIR_2):
-        os.makedirs(MASK_DIR_2)
-    if not os.path.isdir(MASK_DIR_3):
-        os.makedirs(MASK_DIR_3)
-    if not os.path.isdir(MASK_DIR_4):
-        os.makedirs(MASK_DIR_4)
+    global NONPERFUSION_GREYSCALE, BLOCKAGE_GREYSCALE, HIGHSD_GREYSCALE, PERFUSION_GREYSCALE, MULTICLASS_GREYSCALE, NONPERFUSION_BINARY, BLOCKAGE_BINARY, HIGHSD_BINARY, PERFUSION_BINARY, IMAGE_PATHS, INDICES, NUMBEROFIMAGES, IMAGE_DIRECTORY
+    Working_Directory = filedialog.askdirectory()
+    if not path.isdir(path.join(Working_Directory, 'images')):
+        raise ValueError(f"{Working_Directory} must exist and contain the the folder 'images'")
+    IMAGE_DIRECTORY = path.join(Working_Directory, 'images')
+
+    Mask_Directory_Binary = path.join(Working_Directory, 'Masks/Binary_Masks')
+    Mask_Directory_GreyScale = path.join(Working_Directory, 'Masks/GreyScale_Masks')
+
+    NONPERFUSION_BINARY = path.join(Mask_Directory_Binary, "NonPerfusion_Binary")
+    NONPERFUSION_GREYSCALE = path.join(Mask_Directory_GreyScale, "NonPerfusion_GreyScale")
+
+    BLOCKAGE_BINARY = path.join(Mask_Directory_Binary, "Blockage_Binary")
+    BLOCKAGE_GREYSCALE = path.join(Mask_Directory_GreyScale, "Blockage_GreyScale")
+
+    HIGHSD_BINARY = path.join(Mask_Directory_Binary, "HighSD_Binary")
+    HIGHSD_GREYSCALE = path.join(Mask_Directory_GreyScale, "HighSD_GreyScale")
+
+    PERFUSION_BINARY = path.join(Mask_Directory_Binary, "Perfusion_Binary")
+    PERFUSION_GREYSCALE = path.join(Mask_Directory_GreyScale, "Perfusion_GreyScale")
+
+    MULTICLASS_GREYSCALE = path.join(Mask_Directory_GreyScale, "MultiClass_GreyScale")
+
+    if not os.path.isdir(NONPERFUSION_BINARY):
+        os.makedirs(NONPERFUSION_BINARY)
+    if not os.path.isdir(NONPERFUSION_GREYSCALE):
+        os.makedirs(NONPERFUSION_GREYSCALE)
+    if not os.path.isdir(BLOCKAGE_BINARY):
+        os.makedirs(BLOCKAGE_BINARY)
+    if not os.path.isdir(BLOCKAGE_GREYSCALE):
+        os.makedirs(BLOCKAGE_GREYSCALE)
+    if not os.path.isdir(HIGHSD_BINARY):
+        os.makedirs(HIGHSD_BINARY)
+    if not os.path.isdir(HIGHSD_GREYSCALE):
+        os.makedirs(HIGHSD_GREYSCALE)
+    if not os.path.isdir(PERFUSION_BINARY):
+        os.makedirs(PERFUSION_BINARY)
+    if not os.path.isdir(PERFUSION_GREYSCALE):
+        os.makedirs(PERFUSION_GREYSCALE)
+    if not os.path.isdir(MULTICLASS_GREYSCALE):
+        os.makedirs(MULTICLASS_GREYSCALE)
+
     for type_ in VALID_IMAGE_TYPES:
-        IMAGE_PATHS += (glob.glob(img_dir.rstrip('/')+f'/*.{type_}'))
+        IMAGE_PATHS += (glob.glob(IMAGE_DIRECTORY.rstrip('/')+f'/*.{type_}'))
         NUMBEROFIMAGES = len(IMAGE_PATHS)
+    
     Show_Image(IMG_IDX)
 
 def Show_Image(IMG_IDX):
-    global  DISPLAYED, LASSO, IMG, CLASS_MASK_0, CLASS_MASK_1, CLASS_MASK_2, CLASS_MASK_3, PIX,  MASK_PATH_0, MASK_PATH_1,  MASK_PATH_2, MASK_PATH_3, MASK_PATH_4
+    global  DISPLAYED, LASSO, IMG, PIX,  NONPERFUSION_GREYSCALE_MASKPATH, BLOCKAGE_GREYSCALE_MASKPATH,  HIGHSD_GREYSCALE_MASKPATH, PERFUSION_GREYSCALE_MASKPATH, MULTICLASS_GREYSCALE_MASKPATH, NONPERFUSION_GREYSCALE_MASK, BLOCKAGE_GREYSCALE_MASK, HIGHSD_GREYSCALE_MASK, PERFUSION_GREYSCALE_MASK,  NONPERFUSION_BINARY_MASKPATH, BLOCKAGE_BINARY_MASKPATH,  HIGHSD_BINARY_MASKPATH, PERFUSION_BINARY_MASKPATH, MULTICLASS_BINARY_MASKPATH, NONPERFUSION_BINARY_MASK, BLOCKAGE_BINARY_MASK, HIGHSD_BINARY_MASK, PERFUSION_BINARY_MASK
     plt.ion()
     shape = None
     fig = plt.figure(figsize=FIGSIZE)
@@ -156,11 +204,7 @@ def Show_Image(IMG_IDX):
     IMG = io.imread(IMAGE_PATHS[IMG_IDX])
     img_path = IMAGE_PATHS[IMG_IDX]
     ax.set_title(os.path.basename(img_path))
-    MASK_PATH_0 = MASK_DIR_0 + f'/{os.path.basename(img_path)}'
-    MASK_PATH_1 = MASK_DIR_1 + f'/{os.path.basename(img_path)}'
-    MASK_PATH_2 = MASK_DIR_2 + f'/{os.path.basename(img_path)}'
-    MASK_PATH_3 = MASK_DIR_3 + f'/{os.path.basename(img_path)}'
-    MASK_PATH_4 = MASK_DIR_4 + f'/{os.path.basename(img_path)}'
+
     shape = IMG.shape
     pix_x = np.arange(shape[0])
     pix_y = np.arange(shape[1])
@@ -170,25 +214,56 @@ def Show_Image(IMG_IDX):
     
     Display_ImgIndex['text'] = 'Image Number: ' + str(root.counter) + '/' + str(NUMBEROFIMAGES)
 
-    if os.path.exists(MASK_PATH_0):
-        CLASS_MASK_0 = io.imread(MASK_PATH_0)
-    else:
-        CLASS_MASK_0 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+    NONPERFUSION_GREYSCALE_MASKPATH = NONPERFUSION_GREYSCALE + f'/{os.path.basename(img_path)}'
+    BLOCKAGE_GREYSCALE_MASKPATH = BLOCKAGE_GREYSCALE + f'/{os.path.basename(img_path)}'
+    HIGHSD_GREYSCALE_MASKPATH = HIGHSD_GREYSCALE + f'/{os.path.basename(img_path)}'
+    PERFUSION_GREYSCALE_MASKPATH = PERFUSION_GREYSCALE + f'/{os.path.basename(img_path)}'
+    MULTICLASS_GREYSCALE_MASKPATH = MULTICLASS_GREYSCALE + f'/{os.path.basename(img_path)}'
 
-    if os.path.exists(MASK_PATH_1):
-        CLASS_MASK_1 = io.imread(MASK_PATH_1)
+    if os.path.exists(NONPERFUSION_GREYSCALE_MASKPATH):
+        NONPERFUSION_GREYSCALE_MASK = io.imread(NONPERFUSION_GREYSCALE_MASKPATH)
     else:
-        CLASS_MASK_1 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+        NONPERFUSION_GREYSCALE_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
 
-    if os.path.exists(MASK_PATH_2):
-        CLASS_MASK_2 = io.imread(MASK_PATH_2)
+    if os.path.exists(BLOCKAGE_GREYSCALE_MASKPATH):
+        BLOCKAGE_GREYSCALE_MASK = io.imread(BLOCKAGE_GREYSCALE_MASKPATH)
     else:
-        CLASS_MASK_2 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+        BLOCKAGE_GREYSCALE_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
 
-    if os.path.exists(MASK_PATH_3):
-        CLASS_MASK_3 = io.imread(MASK_PATH_3)
+    if os.path.exists(HIGHSD_GREYSCALE_MASKPATH):
+        HIGHSD_GREYSCALE_MASK = io.imread(HIGHSD_GREYSCALE_MASKPATH)
     else:
-        CLASS_MASK_3 = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+        HIGHSD_GREYSCALE_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
+    if os.path.exists(PERFUSION_GREYSCALE_MASKPATH):
+        PERFUSION_GREYSCALE_MASK = io.imread(PERFUSION_GREYSCALE_MASKPATH)
+    else:
+        PERFUSION_GREYSCALE_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
+    NONPERFUSION_BINARY_MASKPATH = NONPERFUSION_BINARY + f'/{os.path.basename(img_path)}'
+    BLOCKAGE_BINARY_MASKPATH = BLOCKAGE_BINARY + f'/{os.path.basename(img_path)}'
+    HIGHSD_BINARY_MASKPATH = HIGHSD_BINARY + f'/{os.path.basename(img_path)}'
+    PERFUSION_BINARY_MASKPATH = PERFUSION_BINARY + f'/{os.path.basename(img_path)}'
+
+    if os.path.exists(NONPERFUSION_BINARY_MASKPATH):
+        NONPERFUSION_BINARY_MASK = io.imread(NONPERFUSION_BINARY_MASKPATH)
+    else:
+        NONPERFUSION_BINARY_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
+    if os.path.exists(BLOCKAGE_BINARY_MASKPATH):
+        BLOCKAGE_BINARY_MASK = io.imread(BLOCKAGE_BINARY_MASKPATH)
+    else:
+        BLOCKAGE_BINARY_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
+    if os.path.exists(HIGHSD_BINARY_MASKPATH):
+        HIGHSD_BINARY_MASK = io.imread(HIGHSD_BINARY_MASKPATH)
+    else:
+        HIGHSD_BINARY_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
+
+    if os.path.exists(PERFUSION_BINARY_MASKPATH):
+        PERFUSION_BINARY_MASK = io.imread(PERFUSION_BINARY_MASKPATH)
+    else:
+        PERFUSION_BINARY_MASK = np.zeros([shape[0],shape[1]],dtype=np.uint8)
 
     LASSO = LassoSelector(ax, Render_Lasso, lineprops=LINEPROPS)
     LASSO.set_active(True)
@@ -235,28 +310,33 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
 
     class_dropdown = ClassColor
     if WhichClass == 1:
-        ClassMask = CLASS_MASK_0
+        ClassMask_GreyScale = NONPERFUSION_GREYSCALE_MASK
+        ClassMask_Binary = NONPERFUSION_BINARY_MASK
     elif WhichClass == 2:
-        ClassMask = CLASS_MASK_1
+        ClassMask_GreyScale = BLOCKAGE_GREYSCALE_MASK
+        ClassMask_Binary = BLOCKAGE_BINARY_MASK
     elif WhichClass == 3:
-        ClassMask = CLASS_MASK_2
+        ClassMask_GreyScale = HIGHSD_GREYSCALE_MASK
+        ClassMask_Binary = HIGHSD_BINARY_MASK
     elif WhichClass == 4:
-        ClassMask = CLASS_MASK_3
+        ClassMask_GreyScale = PERFUSION_GREYSCALE_MASK
+        ClassMask_Binary = PERFUSION_BINARY_MASK
     
     if ResetValue ==1: ## To Reset
-        ClassMask[INDICES] = 0
+        ClassMask_GreyScale[INDICES] = 0
         array[INDICES] = IMG[INDICES]
     elif class_dropdown == 0: ## To Erase
-        ClassMask[INDICES] = 0
-        c_overlay = colors[ClassMask[INDICES]]*255*OVERLAY_ERASE
+        ClassMask_GreyScale[INDICES] = 0
+        c_overlay = colors[ClassMask_GreyScale[INDICES]]*255*OVERLAY_ERASE
         array[INDICES] = (c_overlay + IMG[INDICES]*(1-OVERLAY_ERASE))
     elif INDICES is not None: ## To Draw
-        ClassMask[INDICES] = class_dropdown
-        c_overlay = colors[ClassMask[INDICES]]*255*OVERLAY_ALPHA 
+        ClassMask_GreyScale[INDICES] = class_dropdown
+        ClassMask_Binary[INDICES] = 1
+        c_overlay = colors[ClassMask_GreyScale[INDICES]]*255*OVERLAY_ALPHA 
         array[INDICES] = (IMG[INDICES]*(1-OVERLAY_ALPHA)) #c_overlay + ## Problem: c_overlay has 3 channels (rgb) but test image is bmp so no 3 channels
     else:
-        idx = ClassMask != 0
-        c_overlay = colors[ClassMask[idx]]*255*OVERLAY_ALPHA
+        idx = ClassMask_GreyScale != 0
+        c_overlay = colors[ClassMask_GreyScale[idx]]*255*OVERLAY_ALPHA
         array[idx] = (c_overlay + IMG[idx]*(1-OVERLAY_ALPHA))
     
     DISPLAYED.set_data(array)
@@ -269,33 +349,40 @@ def Which_Class_To_Save(*args):
     for SavingIndex,ClassType in SavingDictionary.items():
         if ClassType==options_save.get():
             if SavingIndex == 1:
-                Save_Mask(CLASS_MASK_0, MASK_PATH_0)
+                Save_Mask(NONPERFUSION_GREYSCALE_MASK, NONPERFUSION_GREYSCALE_MASKPATH, NONPERFUSION_BINARY_MASK, NONPERFUSION_BINARY_MASKPATH)
+
             elif SavingIndex == 2:
-                Save_Mask(CLASS_MASK_1, MASK_PATH_1)
+                Save_Mask(BLOCKAGE_GREYSCALE_MASK, BLOCKAGE_GREYSCALE_MASKPATH, BLOCKAGE_BINARY_MASK, BLOCKAGE_BINARY_MASKPATH)
+
             elif SavingIndex == 3:
-                Save_Mask(CLASS_MASK_2, MASK_PATH_2)
+                Save_Mask(HIGHSD_GREYSCALE_MASK, HIGHSD_GREYSCALE_MASKPATH, HIGHSD_BINARY_MASK, HIGHSD_BINARY_MASKPATH)
+
             elif SavingIndex == 4:
-                Save_Mask(CLASS_MASK_3, MASK_PATH_3)
+                Save_Mask(PERFUSION_GREYSCALE_MASK, PERFUSION_GREYSCALE_MASKPATH, PERFUSION_BINARY_MASK, PERFUSION_BINARY_MASKPATH)
+
             elif SavingIndex == 5:
-                Save_MultiClass_Mask(CLASS_MASK_0, CLASS_MASK_1, CLASS_MASK_2, CLASS_MASK_3, MASK_PATH_4)
+                Save_MultiClass_Mask(NONPERFUSION_GREYSCALE_MASK, BLOCKAGE_GREYSCALE_MASK, HIGHSD_GREYSCALE_MASK, PERFUSION_GREYSCALE_MASK, MULTICLASS_GREYSCALE_MASKPATH)
 
-def Save_Mask(ClassMask, MaskPath, save_if_no_nonzero=False):
-    if (save_if_no_nonzero or np.any(ClassMask != 0)):
-        if os.path.splitext(MaskPath)[1] in ['jpg', 'jpeg']:
-            io.imsave(MaskPath, ClassMask*255, check_contrast =False, quality=100)
+def Save_Mask(ClassMask_GreyScale, MaskPath_GreyScale, ClassMask_Binary, MaskPath_Binary,save_if_no_nonzero=False):
+
+    if (save_if_no_nonzero or np.any(ClassMask_GreyScale != 0)):
+        if os.path.splitext(MaskPath_GreyScale)[1] in ['jpg', 'jpeg']:
+            io.imsave(MaskPath_GreyScale, ClassMask_GreyScale*255, check_contrast =False, quality=100)
+            io.imsave(MaskPath_Binary, ClassMask_Binary, check_contrast =False)
         else:
-            io.imsave(MaskPath, ClassMask*255, check_contrast =False)
+            io.imsave(MaskPath_GreyScale, ClassMask_GreyScale*255, check_contrast =False)
+            io.imsave(MaskPath_Binary, ClassMask_Binary, check_contrast =False)
 
-def Save_MultiClass_Mask(ClassMask1, ClassMask2, ClassMask3, ClassMask4, MaskPath, save_if_no_nonzero=False):
-    stack1 = np.add(ClassMask1,ClassMask2)
-    stack2 = np.add(ClassMask3, ClassMask4)
+def Save_MultiClass_Mask(ClassMask_GreyScale1, ClassMask_GreyScale2, ClassMask_GreyScale3, ClassMask_GreyScale4, MaskPath_GreyScale, save_if_no_nonzero=False):
+    stack1 = np.add(ClassMask_GreyScale1,ClassMask_GreyScale2)
+    stack2 = np.add(ClassMask_GreyScale3, ClassMask_GreyScale4)
     MultiClass_Mask = np.add(stack1, stack2)
 
     if (save_if_no_nonzero or np.any(MultiClass_Mask != 0)):
-        if os.path.splitext(MaskPath)[1] in ['jpg', 'jpeg']:
-            io.imsave(MaskPath, MultiClass_Mask*100, check_contrast =False, quality=100)
+        if os.path.splitext(MaskPath_GreyScale)[1] in ['jpg', 'jpeg']:
+            io.imsave(MaskPath_GreyScale, MultiClass_Mask*100, check_contrast =False, quality=100)
         else:
-            io.imsave(MaskPath, MultiClass_Mask*100, check_contrast =False)
+            io.imsave(MaskPath_GreyScale, MultiClass_Mask*100, check_contrast =False)
 
 def Next_Image_Index():
     global IMG_IDX
@@ -321,120 +408,47 @@ def KMeansSegmentation():...
 
 def DBScanSegmentation():...
 
-def GetNonPerfusionPatch():
-    #ClassMask0
-    NonPerfusionPatch_Locations = np.argwhere(CLASS_MASK_0==1)
-    return NonPerfusionPatch_Locations
+def Which_TextureFeature_ToGenerate():
+    for ClassIndex,ClassType in TextureDictionary.items():
+        if ClassType==options_TextureObject.get():
+            if ClassIndex == 1:
+                PyRadiomicsExtraction(IMAGE_DIRECTORY, NONPERFUSION_BINARY)
+            elif ClassIndex == 2:
+                PyRadiomicsExtraction(IMAGE_DIRECTORY, BLOCKAGE_BINARY)
+            elif ClassIndex == 3:
+                PyRadiomicsExtraction(IMAGE_DIRECTORY, HIGHSD_BINARY)
+            elif ClassIndex == 4:
+                PyRadiomicsExtraction(IMAGE_DIRECTORY, PERFUSION_BINARY)
+def GetPyradiomicsInput(ImagePath, MaskPath):
+    ImageFilePaths = []
+    ImageFiles = os.listdir(ImagePath)
+    for Image in ImageFiles:
+	    ImageFilePaths.append(Image)
 
-def GetPerfusionPatch():
-    #ClassMask3
-    PerfusionPatch_Locations = np.argwhere(CLASS_MASK_3==4)
-    return PerfusionPatch_Locations
+    MaskFilePaths = []
+    MaskFiles = os.listdir(MaskPath)
+    for Mask in MaskFiles:
+	    MaskFilePaths.append(Mask)
 
-def CoOccurenceMatrix():
-    # select some patches from NonPerfusion Area of the image
-    NonPerfusionPatch_Locations = GetNonPerfusionPatch()
-    NumberOfNPLocations = len(NonPerfusionPatch_Locations)
-    MidPointOfNPLocations = int(float(len(NonPerfusionPatch_Locations)/2))
-    NonPerfusion_Patches = []
-    for i in range(0, len(NonPerfusionPatch_Locations)):
-        for loc in NonPerfusionPatch_Locations:
-            if i == 0:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == MidPointOfNPLocations:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == NumberOfNPLocations:
-                NonPerfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            else:
-                i += 1
-
-    # select some patches from Perfusion Area of the image
-    PerfusionPatch_Locations = GetPerfusionPatch()
-    NumberOfPPLocations = len(PerfusionPatch_Locations)
-    MidPointOfPPLocations = int(float(len(PerfusionPatch_Locations)/2))
-    Perfusion_Patches = []
-    for i in range(0, len(PerfusionPatch_Locations)):
-        for loc in PerfusionPatch_Locations:
-            if i == 0:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == MidPointOfPPLocations:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-                i += 1
-            elif i == NumberOfPPLocations:
-                Perfusion_Patches.append(IMG[loc[0]:loc[0] + PATCH_SIZE, loc[1]:loc[1] + PATCH_SIZE])
-            #     i += 1
-            else:
-                i += 1
+    header = ['Image', 'Mask']
+    InputFilePath = "./untitled/Context/countries.csv"
+    with open('./untitled/Context/countries.csv', 'w', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+        for i in range(0,len(ImageFilePaths)):
+            writer.writerow(ImageFilePaths[i], MaskFilePaths[i])
     
-    # compute some GLCM properties each patch
-    Dissimilarity = []
-    Correlation = []
-    for patch in (NonPerfusion_Patches + Perfusion_Patches):
-        glcm = greycomatrix(patch, distances=[5], angles=[0], levels=256, symmetric=True, normed=True)
-        Dissimilarity.append(greycoprops(glcm, 'dissimilarity')[0, 0])
-        Correlation.append(greycoprops(glcm, 'correlation')[0, 0])
+    PyRadiomicsExtraction(InputFilePath)
 
-    # create the figure
-    fig = plt.figure(figsize=(8, 8))
+def PyRadiomicsExtraction(InputFilePath):
 
-    # display original image with locations of patches
-    ax = fig.add_subplot(3, 2, 1)
-    ax.imshow(IMG, cmap=plt.cm.gray,
-            vmin=0, vmax=255)
-    for (y, x) in NonPerfusionPatch_Locations:
-        ax.plot(x + PATCH_SIZE / 2, y + PATCH_SIZE / 2, 'gs')
-    for (y, x) in PerfusionPatch_Locations:
-        ax.plot(x + PATCH_SIZE / 2, y + PATCH_SIZE / 2, 'bs')
-    ax.set_xlabel('Original Image')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.axis('image')
-
-    # for each patch, plot (dissimilarity, correlation)
-    ax = fig.add_subplot(3, 2, 2)
-    ax.plot(Dissimilarity[:len(NonPerfusion_Patches)], Correlation[:len(NonPerfusion_Patches)], 'go',
-            label='NonPerfusion')
-    ax.plot(Dissimilarity[len(NonPerfusion_Patches):], Correlation[len(NonPerfusion_Patches):], 'bo',
-            label='Perfusion')
-    ax.set_xlabel('GLCM Dissimilarity')
-    ax.set_ylabel('GLCM Correlation')
-    ax.legend()
-
-    # display the image patches
-    for i, patch in enumerate(NonPerfusion_Patches):
-        ax = fig.add_subplot(3, len(NonPerfusion_Patches), len(NonPerfusion_Patches)*1 + i + 1)
-        ax.imshow(patch, cmap=plt.cm.gray,
-                vmin=0, vmax=255)
-        ax.set_xlabel('NonPerfusion %d' % (i + 1))
-
-    for i, patch in enumerate(Perfusion_Patches):
-        ax = fig.add_subplot(3, len(Perfusion_Patches), len(Perfusion_Patches)*2 + i + 1)
-        ax.imshow(patch, cmap=plt.cm.gray,
-                vmin=0, vmax=255)
-        ax.set_xlabel('Perfusion %d' % (i + 1))
-
-
-    # display the patches and plot
-    fig.suptitle('Grey level co-occurrence matrix features', fontsize=14, y=1.05)
-    plt.tight_layout()
-    plt.show()
-
-def RunLengthMatrix():...
-
-def SizeZoneMatrix(): ...
-
-def DependenceMatrix(): ...
-
-def HistogramGenerator(): ...
-
-def LoGFilter(): ...
-
-def WaveletTransformation(): ...
-
+    extractor = featureextractor.RadiomicsFeatureExtractor()
+    result = extractor.execute(InputFilePath)
+    keys, values = [], []
+    for key, value in result.items():
+        keys.append(key)
+        values.append(value)
+        print(key)
 
 #Tkinter Window
 
@@ -446,7 +460,8 @@ if __name__=="__main__":
     ClassDictionary={1: 'Non-Perfusion Area', 2: 'Blockage Artefact', 3: 'High Standard Deviation Artefact', 4: 'Perfusion Area'}
     ActionDictionary={1: 'Draw', 2: 'Erase'}
     SavingDictionary={1: 'Non-Perfusion Area Class', 2: 'Blockage Artefact Class', 3: 'High Standard Deviation Artefact Class', 4: 'Perfusion Area Class', 5: 'Multi-Class'}
-
+    TextureDictionary={1: 'Non-Perfusion Area Texture', 2: 'Blockage Artefact Texture', 3: 'High Standard Deviation Artefact Texture', 4: 'Perfusion Area Texture'}
+    
     canvas = tk.Canvas(root, height=HEIGHT_OF_GUI, width=WIDTH_OF_GUI)
     canvas.pack(side=tk.RIGHT, fill = tk.BOTH, expand=2)
 
@@ -460,6 +475,8 @@ if __name__=="__main__":
     options_draw.set(ActionDictionary[1])
     options_save = tk.StringVar(ButtonFrame)
     options_save.set('Save Mask:')
+    options_TextureObject = tk.StringVar(ButtonFrame)
+    options_TextureObject.set('Generate Texture Features of:')
 
 ##Row1
     LoadFolder = tk.Button(ButtonFrame, text="Load Folder", command = Get_Folder)
@@ -497,26 +514,20 @@ if __name__=="__main__":
     DBScan_Segmentation.place(relx=0.15, rely=0.45, relwidth=0.1, relheight=0.4)
 
 ##Row2 - Feature Classes
-    GLCM_Generator = tk.Button(ButtonFrame, text="GLCM", command = CoOccurenceMatrix)
-    GLCM_Generator.place(relx=0.25, rely=0.45, relwidth=0.1, relheight=0.4)
+    ClassDropDown_TexturalFeatures = tk.OptionMenu( ButtonFrame, options_TextureObject, *TextureDictionary.values())
+    ClassDropDown_TexturalFeatures.place(relx=0.25, rely=0.45, relwidth=0.2, relheight=0.4)
 
-    GLRLM_Generator = tk.Button(ButtonFrame, text="GLRLM", command = RunLengthMatrix)
-    GLRLM_Generator.place(relx=0.35, rely=0.45, relwidth=0.1, relheight=0.4)
+    ExtractTexturalFeatures = tk.Button(ButtonFrame, text="Extract Textural Features", command = Which_TextureFeature_ToGenerate)
+    ExtractTexturalFeatures.place(relx=0.45, rely=0.45, relwidth=0.3, relheight=0.4)
 
-    GLSZM_Generator = tk.Button(ButtonFrame, text="GLSZMM", command = SizeZoneMatrix)
-    GLSZM_Generator.place(relx=0.45, rely=0.45, relwidth=0.1, relheight=0.4)
+#     Histogram_Generator = tk.Button(ButtonFrame, text="Histogram", command = HistogramGenerator)
+#     Histogram_Generator.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    GLDM_Generator = tk.Button(ButtonFrame, text="GLDM", command = DependenceMatrix)
-    GLDM_Generator.place(relx=0.55, rely=0.45, relwidth=0.1, relheight=0.4)
+# ##Row2 - Image Filter
+#     LoG_Filter = tk.Button(ButtonFrame, text="LoG Filter", command = LoGFilter)
+#     LoG_Filter.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
 
-    Histogram_Generator = tk.Button(ButtonFrame, text="Histogram", command = HistogramGenerator)
-    Histogram_Generator.place(relx=0.65, rely=0.45, relwidth=0.1, relheight=0.4)
-
-##Row2 - Image Filter
-    LoG_Filter = tk.Button(ButtonFrame, text="LoG Filter", command = LoGFilter)
-    LoG_Filter.place(relx=0.75, rely=0.45, relwidth=0.1, relheight=0.4)
-
-    Wavelet_Transform = tk.Button(ButtonFrame, text="Wavelet", command = WaveletTransformation)
-    Wavelet_Transform.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
+#     Wavelet_Transform = tk.Button(ButtonFrame, text="Wavelet", command = WaveletTransformation)
+#     Wavelet_Transform.place(relx=0.85, rely=0.45, relwidth=0.1, relheight=0.4)
 
 root.mainloop()

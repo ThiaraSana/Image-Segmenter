@@ -31,9 +31,29 @@ from os import path
 import glob
 import SimpleITK as sitk
 
-IMG = io.imread("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/untitled folder/image.png")
-Mask = io.imread("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/train_masks/train/Class1/thumbnail_image.png")
-print(radiomics.glcm.RadiomicsGLCM.getAutocorrelationFeatureValue(IMG))
+# IMG = io.imread("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/untitled folder/image.png")
+# Mask = io.imread("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/train_masks/train/Class1/thumbnail_image.png")
+# print(radiomics.glcm.RadiomicsGLCM.getAutocorrelationFeatureValue(IMG))
+# Define the testcase name
+# testCase = 'brain1'
+
+# # Get the relative path to pyradiomics\data
+# # os.cwd() returns the current working directory
+# # ".." points to the parent directory: \pyradiomics\bin\Notebooks\..\ is equal to \pyradiomics\bin\
+# # Move up 2 directories (i.e. go to \pyradiomics\) and then move into \pyradiomics\data
+# dataDir = os.path.join(os.getcwd(), "..", "..", "data")
+# print("dataDir, relative path:", dataDir)
+# print("dataDir, absolute path:", os.path.abspath(dataDir))
+
+# # Store the file paths of our testing image and label map into two variables
+# imagePath = os.path.join(dataDir, testCase + "_image.nrrd")
+# labelPath = os.path.join(dataDir, testCase + "_label.nrrd")
+
+# # Additonally, store the location of the example parameter file, stored in \pyradiomics\bin
+# paramPath = os.path.join(os.getcwd(), "..", "Params.yaml")
+# print("Parameter file, absolute path:", os.path.abspath(paramPath))
+# extractor = featureextractor.RadiomicsFeatureExtractor()
+# print(extractor)
 # model = KElbowVisualizer(KMeans(), k=70)
 # model.fit(img)
 # model.show()
@@ -52,3 +72,14 @@ print(radiomics.glcm.RadiomicsGLCM.getAutocorrelationFeatureValue(IMG))
 
 # print('Estimated number of clusters: %d' % n_clusters_)
 # print('Estimated number of noise points: %d' % n_noise_)
+
+image = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/thumbnail_image.png", sitk.sitkInt8)
+mask = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/train_masks/train/Class1/thumbnail_image.png", sitk.sitkInt8)
+extractor = featureextractor.RadiomicsFeatureExtractor()
+result = extractor.execute(image, mask)
+keys, values = [], []
+
+for key, value in result.items():
+    keys.append(key)
+    values.append(value)
+    print(key, value)
