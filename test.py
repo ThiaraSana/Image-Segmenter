@@ -73,13 +73,22 @@ import SimpleITK as sitk
 # print('Estimated number of clusters: %d' % n_clusters_)
 # print('Estimated number of noise points: %d' % n_noise_)
 
-image = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/thumbnail_image.png", sitk.sitkInt8)
-mask = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/train_masks/train/Class1/thumbnail_image.png", sitk.sitkInt8)
-extractor = featureextractor.RadiomicsFeatureExtractor()
-result = extractor.execute(image, mask)
-keys, values = [], []
+# image = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/thumbnail_image.png", sitk.sitkInt8)
+# mask = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/train/train_masks/train/Class1/thumbnail_image.png", sitk.sitkInt8)
+# extractor = featureextractor.RadiomicsFeatureExtractor()
+# result = extractor.execute(image, mask)
+# keys, values = [], []
 
-for key, value in result.items():
-    keys.append(key)
-    values.append(value)
-    print(key, value)
+# for key, value in result.items():
+#     keys.append(key)
+#     values.append(value)
+#     print(key, value)
+ImagePaths = []
+ImagePath = "/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/images/"
+ImageFiles = os.listdir(ImagePath)
+for i in range(0, len(ImageFiles)):
+    IF = ImagePath + ImageFiles[i] 
+    ImagePaths.append(IF)
+    i += 1
+print(ImagePaths)
+

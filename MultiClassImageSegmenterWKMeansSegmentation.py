@@ -412,38 +412,54 @@ def Which_TextureFeature_ToGenerate():
     for ClassIndex,ClassType in TextureDictionary.items():
         if ClassType==options_TextureObject.get():
             if ClassIndex == 1:
-                PyRadiomicsExtraction(IMAGE_DIRECTORY, NONPERFUSION_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, NONPERFUSION_BINARY)
             elif ClassIndex == 2:
-                PyRadiomicsExtraction(IMAGE_DIRECTORY, BLOCKAGE_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, BLOCKAGE_BINARY)
             elif ClassIndex == 3:
-                PyRadiomicsExtraction(IMAGE_DIRECTORY, HIGHSD_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, HIGHSD_BINARY)
             elif ClassIndex == 4:
-                PyRadiomicsExtraction(IMAGE_DIRECTORY, PERFUSION_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, PERFUSION_BINARY)
+    
 def GetPyradiomicsInput(ImagePath, MaskPath):
     ImageFilePaths = []
     ImageFiles = os.listdir(ImagePath)
-    for Image in ImageFiles:
-	    ImageFilePaths.append(Image)
+    for i in range(0, len(ImageFiles)):
+        FilePath = ImagePath + ImageFiles[i]
+        ImageFilePaths.append(FilePath)
+        i += 1
+    print(ImageFilePaths)
 
     MaskFilePaths = []
     MaskFiles = os.listdir(MaskPath)
-    for Mask in MaskFiles:
-	    MaskFilePaths.append(Mask)
+    for i in range(0, len(MaskFiles)):
+        FilePath = MaskPath + MaskFiles[i]
+        MaskFilePaths.append(FilePath)
+        i += 1
+    print(MaskFilePaths)
 
-    header = ['Image', 'Mask']
-    InputFilePath = "./untitled/Context/countries.csv"
-    with open('./untitled/Context/countries.csv', 'w', encoding='UTF8') as f:
+    # header = ['Image', 'Mask']
+    InputFilePath_Image = "./untitled/Context/PyRadImage.csv"
+    with open('./untitled/Context/PyRadImage.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(header)
-        for i in range(0,len(ImageFilePaths)):
-            writer.writerow(ImageFilePaths[i], MaskFilePaths[i])
+        # writer.writerow(header)
+        for ImageFile in ImageFilePaths:
+            writer.writerows(ImageFile)
     
-    PyRadiomicsExtraction(InputFilePath)
+    
+    InputFilePath_Mask = "./untitled/Context/PyRadMask.csv"
+    with open('./untitled/Context/PyRadMask.csv', 'w') as f:
+        writer = csv.writer(f)
+    # writer.writerow(header)
+        for MaskFile in MaskFilePaths:
+            writer.writerows(MaskFile)
 
-def PyRadiomicsExtraction(InputFilePath):
+
+    PyRadiomicsExtraction(InputFilePath_Image, InputFilePath_Mask)
+
+def PyRadiomicsExtraction(InputFilePath_Image, InputFilePath_Mask):
 
     extractor = featureextractor.RadiomicsFeatureExtractor()
-    result = extractor.execute(InputFilePath)
+    result = extractor.execute(InputFilePath_Image, InputFilePath_Mask)
     keys, values = [], []
     for key, value in result.items():
         keys.append(key)
