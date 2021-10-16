@@ -22,8 +22,6 @@ from radiomics import featureextractor
 
 import SimpleITK as sitk
 
-import pandas as pd
-
 import os
 from os import path
 
@@ -312,7 +310,7 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
     elif class_dropdown == 0: ## To Erase
         ClassMask_GreyScale[INDICES] = 0
         c_overlay = colors[ClassMask_GreyScale[INDICES]]*255*OVERLAY_ERASE
-        array[INDICES] = (c_overlay + IMG[INDICES]*(1-OVERLAY_ERASE))
+        array[INDICES] = (IMG[INDICES]*(1-OVERLAY_ERASE)) #c_overlay + 
     elif INDICES is not None: ## To Draw
         ClassMask_GreyScale[INDICES] = class_dropdown
         ClassMask_Binary[INDICES] = 1
@@ -321,7 +319,7 @@ def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
     else:
         idx = ClassMask_GreyScale != 0
         c_overlay = colors[ClassMask_GreyScale[idx]]*255*OVERLAY_ALPHA
-        array[idx] = (c_overlay + IMG[idx]*(1-OVERLAY_ALPHA))
+        array[idx] = (IMG[idx]*(1-OVERLAY_ALPHA)) #c_overlay +
     
     DISPLAYED.set_data(array)
 
@@ -489,7 +487,7 @@ if __name__=="__main__":
     ChooseMaskToSave = tk.OptionMenu(ButtonFrame, options_save, *SavingDictionary.values())
     ChooseMaskToSave.place(relx=0.7, rely=0.05, relwidth=0.2, relheight=0.4)
     
-    SaveMask = tk.Button(ButtonFrame, text="Save Image", command = Which_Class_To_Save)
+    SaveMask = tk.Button(ButtonFrame, text="Save Mask", command = Which_Class_To_Save)
     SaveMask.place(relx=0.9, rely=0.05, relwidth=0.06, relheight=0.4)
 
 ##Row2 - ML Segmentation
