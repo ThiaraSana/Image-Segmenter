@@ -20,6 +20,9 @@ import radiomics
 from radiomics import glrlm
 from radiomics import featureextractor
 
+import SimpleITK as sitk
+
+import pandas as pd
 
 import os
 from os import path
@@ -43,40 +46,6 @@ IMAGE_DIRECTORY = []
 IMG = []
 IMAGE_PATHS = []
 PIX = []
-
-# NONPERFUSION_GREYSCALE = []
-# BLOCKAGE_GREYSCALE = []
-# HIGHSD_GREYSCALE = []
-# PERFUSION_GREYSCALE = []
-# MULTICLASS_GREYSCALE = []
-
-# NONPERFUSION_BINARY = []
-# BLOCKAGE_BINARY = []
-# HIGHSD_BINARY = []
-# PERFUSION_BINARY = []
-# MULTICLASS_BINARY = []
-
-# NONPERFUSION_GREYSCALE_MASKPATH = []
-# BLOCKAGE_GREYSCALE_MASKPATH = []
-# HIGHSD_GREYSCALE_MASKPATH = []
-# PERFUSION_GREYSCALE_MASKPATH = []
-# MULTICLASS_GREYSCALE_MASKPATH = []
-
-# NONPERFUSION_BINARY_MASKPATH = []
-# BLOCKAGE_BINARY_MASKPATH = []
-# HIGHSD_BINARY_MASKPATH = []
-# PERFUSION_BINARY_MASKPATH = []
-# MULTICLASS_BINARY_MASKPATH = []
-
-# NONPERFUSION_GREYSCALE_MASK = []
-# BLOCKAGE_GREYSCALE_MASK = []
-# HIGHSD_GREYSCALE_MASK = []
-# PERFUSION_GREYSCALE_MASK = []
-
-# NONPERFUSION_BINARY_MASK = []
-# BLOCKAGE_BINARY_MASK = []
-# HIGHSD_BINARY_MASK = []
-# PERFUSION_BINARY_MASK = []
 
 PATCH_SIZE = 21
 
@@ -147,11 +116,11 @@ def zoom_factory(ax,base_scale = 1.1):
     return disconnect_zoom
 
 def Get_Folder():
-    global NONPERFUSION_GREYSCALE, BLOCKAGE_GREYSCALE, HIGHSD_GREYSCALE, PERFUSION_GREYSCALE, MULTICLASS_GREYSCALE, NONPERFUSION_BINARY, BLOCKAGE_BINARY, HIGHSD_BINARY, PERFUSION_BINARY, IMAGE_PATHS, INDICES, NUMBEROFIMAGES, IMAGE_DIRECTORY
+    global NONPERFUSION_GREYSCALE, BLOCKAGE_GREYSCALE, HIGHSD_GREYSCALE, PERFUSION_GREYSCALE, MULTICLASS_GREYSCALE, NONPERFUSION_BINARY, BLOCKAGE_BINARY, HIGHSD_BINARY, PERFUSION_BINARY, NONPERFUSION_TEXTURE, BLOCKAGE_TEXTURE, HIGHSD_TEXTURE, PERFUSION_TEXTURE, IMAGE_PATHS, INDICES, NUMBEROFIMAGES, IMAGE_DIRECTORY
     Working_Directory = filedialog.askdirectory()
-    if not path.isdir(path.join(Working_Directory, 'images')):
-        raise ValueError(f"{Working_Directory} must exist and contain the the folder 'images'")
-    IMAGE_DIRECTORY = path.join(Working_Directory, 'images')
+    if not path.isdir(path.join(Working_Directory, 'Images')):
+        raise ValueError(f"{Working_Directory} must exist and contain the the folder 'Images'")
+    IMAGE_DIRECTORY = path.join(Working_Directory, 'Images')
 
     Mask_Directory_Binary = path.join(Working_Directory, 'Masks/Binary_Masks')
     Mask_Directory_GreyScale = path.join(Working_Directory, 'Masks/GreyScale_Masks')
@@ -193,6 +162,22 @@ def Get_Folder():
         IMAGE_PATHS += (glob.glob(IMAGE_DIRECTORY.rstrip('/')+f'/*.{type_}'))
         NUMBEROFIMAGES = len(IMAGE_PATHS)
     
+    TextureAnalysis_Directory = path.join(Working_Directory, 'TexturalFeatures')
+
+    NONPERFUSION_TEXTURE = path.join(TextureAnalysis_Directory, "NonPerfusion_Texture")
+    BLOCKAGE_TEXTURE = path.join(TextureAnalysis_Directory, "Blockage_Texture")
+    HIGHSD_TEXTURE = path.join(TextureAnalysis_Directory, "HighSD_Texture")
+    PERFUSION_TEXTURE = path.join(TextureAnalysis_Directory, "Perfusion_Texture")
+
+    if not os.path.isdir(NONPERFUSION_TEXTURE):
+        os.makedirs(NONPERFUSION_TEXTURE)
+    if not os.path.isdir(BLOCKAGE_TEXTURE):
+        os.makedirs(BLOCKAGE_TEXTURE)
+    if not os.path.isdir(HIGHSD_TEXTURE):
+        os.makedirs(HIGHSD_TEXTURE)
+    if not os.path.isdir(PERFUSION_TEXTURE):
+        os.makedirs(PERFUSION_TEXTURE)
+
     Show_Image(IMG_IDX)
 
 def Show_Image(IMG_IDX):
@@ -295,7 +280,6 @@ def Render_Lasso(verts):
     Update_Array(INDICES, ResetValue = 0, ClassColor = Color, WhichClass = Class)
 
 def Update_Array(INDICES, ResetValue, ClassColor, WhichClass):
-
     array = DISPLAYED.get_array().data
     ImageClasses = [['Non-Perfusion Area'], ['Blockage Artefact'], ['High Standard Deviation Artefact'], ['Perfusion Area']]
     if isinstance(ImageClasses, int):
@@ -364,7 +348,6 @@ def Which_Class_To_Save(*args):
                 Save_MultiClass_Mask(NONPERFUSION_GREYSCALE_MASK, BLOCKAGE_GREYSCALE_MASK, HIGHSD_GREYSCALE_MASK, PERFUSION_GREYSCALE_MASK, MULTICLASS_GREYSCALE_MASKPATH)
 
 def Save_Mask(ClassMask_GreyScale, MaskPath_GreyScale, ClassMask_Binary, MaskPath_Binary,save_if_no_nonzero=False):
-
     if (save_if_no_nonzero or np.any(ClassMask_GreyScale != 0)):
         if os.path.splitext(MaskPath_GreyScale)[1] in ['jpg', 'jpeg']:
             io.imsave(MaskPath_GreyScale, ClassMask_GreyScale*255, check_contrast =False, quality=100)
@@ -412,59 +395,46 @@ def Which_TextureFeature_ToGenerate():
     for ClassIndex,ClassType in TextureDictionary.items():
         if ClassType==options_TextureObject.get():
             if ClassIndex == 1:
-                GetPyradiomicsInput(IMAGE_DIRECTORY, NONPERFUSION_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, NONPERFUSION_BINARY, NONPERFUSION_TEXTURE)
             elif ClassIndex == 2:
-                GetPyradiomicsInput(IMAGE_DIRECTORY, BLOCKAGE_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, BLOCKAGE_BINARY, BLOCKAGE_TEXTURE)
             elif ClassIndex == 3:
-                GetPyradiomicsInput(IMAGE_DIRECTORY, HIGHSD_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, HIGHSD_BINARY, HIGHSD_TEXTURE)
             elif ClassIndex == 4:
-                GetPyradiomicsInput(IMAGE_DIRECTORY, PERFUSION_BINARY)
+                GetPyradiomicsInput(IMAGE_DIRECTORY, PERFUSION_BINARY, PERFUSION_TEXTURE)
     
-def GetPyradiomicsInput(ImagePath, MaskPath):
-    ImageFilePaths = []
+def GetPyradiomicsInput(ImagePath, MaskPath, SavingPath):
     ImageFiles = os.listdir(ImagePath)
     for i in range(0, len(ImageFiles)):
-        FilePath = ImagePath + ImageFiles[i]
-        ImageFilePaths.append(FilePath)
-        i += 1
-    print(ImageFilePaths)
-
-    MaskFilePaths = []
-    MaskFiles = os.listdir(MaskPath)
-    for i in range(0, len(MaskFiles)):
-        FilePath = MaskPath + MaskFiles[i]
-        MaskFilePaths.append(FilePath)
-        i += 1
-    print(MaskFilePaths)
-
-    # header = ['Image', 'Mask']
-    InputFilePath_Image = "./untitled/Context/PyRadImage.csv"
-    with open('./untitled/Context/PyRadImage.csv', 'w') as f:
-        writer = csv.writer(f)
-        # writer.writerow(header)
-        for ImageFile in ImageFilePaths:
-            writer.writerows(ImageFile)
+        if ImageFiles[i] == ".DS_Store":
+            i+=1
+        else:
+            ImageFilePath = ImagePath + '/' + ImageFiles[i]
+            print(ImageFilePath)
+            MaskFilePath = MaskPath + '/'  + ImageFiles[i]
+            print(MaskFilePath)
+            Image = sitk.ReadImage(ImageFilePath, sitk.sitkInt8)
+            Mask = sitk.ReadImage(MaskFilePath, sitk.sitkInt8)
+            PyRadiomicsExtraction(Image, Mask, ImageFiles[i], SavingPath)
+            i +=1
     
-    
-    InputFilePath_Mask = "./untitled/Context/PyRadMask.csv"
-    with open('./untitled/Context/PyRadMask.csv', 'w') as f:
-        writer = csv.writer(f)
-    # writer.writerow(header)
-        for MaskFile in MaskFilePaths:
-            writer.writerows(MaskFile)
-
-
-    PyRadiomicsExtraction(InputFilePath_Image, InputFilePath_Mask)
-
-def PyRadiomicsExtraction(InputFilePath_Image, InputFilePath_Mask):
-
+def PyRadiomicsExtraction(Image, Mask, SavingName, SavingPath):
     extractor = featureextractor.RadiomicsFeatureExtractor()
-    result = extractor.execute(InputFilePath_Image, InputFilePath_Mask)
+    result = extractor.execute(Image, Mask)
+
     keys, values = [], []
     for key, value in result.items():
         keys.append(key)
-        values.append(value)
         print(key)
+        values.append(value)
+        print(value)
+    SavingName = SavingName[:-4]
+    SavingName = SavingName + ".csv"
+    ResultsFile = SavingPath + '/' + SavingName
+    with open(ResultsFile, "w") as outfile:
+        csvwriter = csv.writer(outfile)
+        csvwriter.writerow(keys)
+        csvwriter.writerow(values)
 
 #Tkinter Window
 

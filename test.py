@@ -83,12 +83,27 @@ import SimpleITK as sitk
 #     keys.append(key)
 #     values.append(value)
 #     print(key, value)
-ImagePaths = []
-ImagePath = "/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/images/"
-ImageFiles = os.listdir(ImagePath)
-for i in range(0, len(ImageFiles)):
-    IF = ImagePath + ImageFiles[i] 
-    ImagePaths.append(IF)
-    i += 1
-print(ImagePaths)
+# ImagePaths = []
+# ImagePath = "/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/images/"
+# ImageFiles = os.listdir(ImagePath)
+# for i in range(0, len(ImageFiles)):
+#     IF = ImagePath + ImageFiles[i] 
+#     ImagePaths.append(IF)
+#     i += 1
+# print(ImagePaths)
+import csv
+image = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/images/thumbnail_image.png", sitk.sitkInt8)
+mask = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/Masks/Binary_Masks/NonPerfusion_Binary/thumbnail_image.png", sitk.sitkInt8)
+extractor = featureextractor.RadiomicsFeatureExtractor()
+result = extractor.execute(image,mask)
+# print(result)
+# result = extractor.execute(InputFilePath_Image, InputFilePath_Mask)
+keys, values = [], []
+for key, value in result.items():
+    keys.append(key)
+    values.append(value)
+with open("frequencies.csv", "w") as outfile:
+    csvwriter = csv.writer(outfile)
+    csvwriter.writerow(keys)
+    csvwriter.writerow(values)
 
