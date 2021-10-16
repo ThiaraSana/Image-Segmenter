@@ -14,10 +14,7 @@ from skimage import io
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 
-from skimage.feature import greycomatrix, greycoprops
-
 import radiomics
-from radiomics import glrlm
 from radiomics import featureextractor
 
 import SimpleITK as sitk
@@ -44,8 +41,6 @@ IMAGE_DIRECTORY = []
 IMG = []
 IMAGE_PATHS = []
 PIX = []
-
-PATCH_SIZE = 21
 
 #Functions
 
