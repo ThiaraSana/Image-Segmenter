@@ -1,3 +1,4 @@
+import skimage
 from skimage import io
 
 import imghdr
@@ -91,19 +92,21 @@ import SimpleITK as sitk
 #     ImagePaths.append(IF)
 #     i += 1
 # print(ImagePaths)
-import csv
-image = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/images/thumbnail_image.png", sitk.sitkInt8)
-mask = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/Masks/Binary_Masks/NonPerfusion_Binary/thumbnail_image.png", sitk.sitkInt8)
-extractor = featureextractor.RadiomicsFeatureExtractor()
-result = extractor.execute(image,mask)
-# print(result)
-# result = extractor.execute(InputFilePath_Image, InputFilePath_Mask)
-keys, values = [], []
-for key, value in result.items():
-    keys.append(key)
-    values.append(value)
-with open("frequencies.csv", "w") as outfile:
-    csvwriter = csv.writer(outfile)
-    csvwriter.writerow(keys)
-    csvwriter.writerow(values)
-
+# import csv
+# image = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/images/thumbnail_image.png", sitk.sitkInt8)
+# mask = sitk.ReadImage("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/untitled/Masks/Binary_Masks/NonPerfusion_Binary/thumbnail_image.png", sitk.sitkInt8)
+# extractor = featureextractor.RadiomicsFeatureExtractor()
+# result = extractor.execute(image,mask)
+# # print(result)
+# # result = extractor.execute(InputFilePath_Image, InputFilePath_Mask)
+# keys, values = [], []
+# for key, value in result.items():
+#     keys.append(key)
+#     values.append(value)
+# with open("frequencies.csv", "w") as outfile:
+#     csvwriter = csv.writer(outfile)
+#     csvwriter.writerow(keys)
+#     csvwriter.writerow(values)
+image = skimage.io.imread("/Users/sanaahmed/Documents/GitHub/Image-Segmenter/WorkingDirectory_IS/Images/thumbnail_image.png")
+histogram, bin_edges = np.histogram(image, bins=256, range=(0, 1))
+print(bin_edges)

@@ -429,6 +429,9 @@ def PyRadiomicsExtraction(Image, Mask, SavingName, SavingPath):
         csvwriter.writerow(keys)
         csvwriter.writerow(values)
 
+# def HistogramGenerator():
+#     histogram, bin_edges = np.histogram(image, bins=256, range=(0, 1))
+
 #Tkinter Window
 
 if __name__=="__main__":
